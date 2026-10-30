@@ -298,8 +298,8 @@ table.data td { padding: 10px 14px; border-top: 1px solid var(--line-soft); font
 
 /* ---- fit every laptop: scale to the screen instead of scrolling ---- */
 .chart-box { position: relative; height: clamp(260px, calc(100vh - 330px), 560px); }
-.hero { min-height: clamp(170px, 30vh, 300px); }
-.hero-content { padding: clamp(24px, 5vh, 48px) 20px; }
+.hero { min-height: clamp(240px, 44vh, 460px); }
+.hero-content { padding: clamp(32px, 7vh, 72px) 20px; }
 .hero h1 { font-size: clamp(28px, min(5.2vw, 7vh), 56px); }
 @media (min-width: 1000px) {
   /* trade box stays in view while the chart and tables scroll */
