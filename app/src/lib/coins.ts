@@ -5,6 +5,7 @@
  * Trades, holders and charts come from the indexer (phase 2).
  */
 import { Connection, PublicKey } from "@solana/web3.js";
+import { unstable_cache } from "next/cache";
 import { DynamicBondingCurveClient } from "@meteora-ag/dynamic-bonding-curve-sdk";
 import bs58 from "bs58";
 import { DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_ENABLED, LEVERAGE_MODE, LEVERAGE_PROGRAM, LS_API, RPC_URL, TOTAL_SUPPLY } from "./config";
@@ -142,8 +143,7 @@ export async function solUsd(connection: Connection) {
 let cache: { at: number; coins: Coin[] } | null = null;
 let thresholdLamports = 0;
 
-export async function listCoins(): Promise<Coin[]> {
-  if (cache && Date.now() - cache.at < 10_000) return cache.coins;
+async function scanCoins(): Promise<Coin[]> {
   const connection = new Connection(RPC_URL, "confirmed");
   const dbc = DynamicBondingCurveClient.create(connection, "confirmed");
   const [pools, config, slot, usd, markets] = await Promise.all([
@@ -216,6 +216,28 @@ export async function listCoins(): Promise<Coin[]> {
   coins.sort((a, b) => a.ageSeconds - b.ageSeconds);
   cache = { at: Date.now(), coins };
   return coins;
+}
+
+/**
+ * One copy of the coin list shared by every server instance (Vercel's data
+ * cache), refreshed in the background every few seconds. Requests never wait
+ * on the chain scan, except the very first one after a deploy.
+ */
+const sharedCoins = unstable_cache(async () => {
+  const coins = await scanCoins();
+  return { coins, threshold: thresholdLamports };
+}, ["coins-v2"], { revalidate: 4 });
+
+export async function listCoins(): Promise<Coin[]> {
+  if (cache && Date.now() - cache.at < 2_000) return cache.coins;
+  try {
+    const { coins, threshold } = await sharedCoins();
+    if (threshold) thresholdLamports = threshold;
+    cache = { at: Date.now(), coins };
+    return coins;
+  } catch {
+    return scanCoins();
+  }
 }
 
 export async function getCoin(mint: string) {

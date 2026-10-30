@@ -31,7 +31,7 @@ export function LeveragePanel({ coin, lev, onDone, initialLong = true }: { coin:
   if (!lev.market || !lev.market.enabled) {
     return (
       <p className="note">
-        Long/short isn&apos;t enabled for ${coin.symbol} yet. It unlocks once the coin has enough liquidity and its price history is being tracked.
+        Long/short isn&apos;t enabled for ${coin.symbol} yet. It unlocks once the coin has enough liquidity generated from the trading fees and its price history is being tracked.
       </p>
     );
   }
