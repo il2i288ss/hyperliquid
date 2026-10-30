@@ -1,0 +1,219 @@
+Found incorrect program id declaration in "/home/runner/work/hyperliquid/hyperliquid/programs/leverage/src/lib.rs"
+Updated to CVa7fiyDKgrE1EHxcgLPNJv69Yj5hLSfnfu1XhhhuR2x
+
+Found incorrect program id declaration in Anchor.toml for the program `leverage`
+Updated to CVa7fiyDKgrE1EHxcgLPNJv69Yj5hLSfnfu1XhhhuR2x
+
+All program id declarations are synced.
+Please rebuild the program to update the generated artifacts.
+[2026-10-30T13:08:28.193121221Z WARN  cargo_build_sbf] Package 'leverage' has two crate types defined: cdylib and lib. This setting precludes link-time optimizations (LTO). Use cdylib for programs to be deployed and rlib for packages to be imported by other programs as libraries.
+[1m[92m   Compiling[0m leverage v0.1.0 (/home/runner/work/hyperliquid/hyperliquid/programs/leverage)
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `custom-heap`[0m
+  [1m[94m--> [0mprograms/leverage/src/lib.rs:27:1
+   [1m[94m|[0m
+[1m[94m27[0m [1m[94m|[0m #[program]
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+   [1m[94m= [0m[1mnote[0m: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   [1m[94m= [0m[1mhelp[0m: try referring to `$crate::custom_heap_default` crate for guidance on how handle this unexpected cfg
+   [1m[94m= [0m[1mhelp[0m: the macro `$crate::custom_heap_default` may come from an old version of the `solana_program_entrypoint` crate, try updating your dependency with `cargo update -p solana_program_entrypoint`
+   [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   [1m[94m= [0m[1mnote[0m: `#[warn(unexpected_cfgs)]` on by default
+   [1m[94m= [0m[1mnote[0m: this warning originates in the macro `$crate::custom_heap_default` which comes from the expansion of the attribute macro `program` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `custom-panic`[0m
+  [1m[94m--> [0mprograms/leverage/src/lib.rs:27:1
+   [1m[94m|[0m
+[1m[94m27[0m [1m[94m|[0m #[program]
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+   [1m[94m= [0m[1mnote[0m: using a cfg inside a macro will use the cfgs from the destination crate and not the ones from the defining crate
+   [1m[94m= [0m[1mhelp[0m: try referring to `$crate::custom_panic_default` crate for guidance on how handle this unexpected cfg
+   [1m[94m= [0m[1mhelp[0m: the macro `$crate::custom_panic_default` may come from an old version of the `solana_program_entrypoint` crate, try updating your dependency with `cargo update -p solana_program_entrypoint`
+   [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   [1m[94m= [0m[1mnote[0m: this warning originates in the macro `$crate::custom_panic_default` which comes from the expansion of the attribute macro `program` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+  [1m[94m--> [0mprograms/leverage/src/lib.rs:27:1
+   [1m[94m|[0m
+[1m[94m27[0m [1m[94m|[0m #[program]
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+   [1m[94m= [0m[1mnote[0m: using a cfg inside a attribute macro will use the cfgs from the destination crate and not the ones from the defining crate
+   [1m[94m= [0m[1mhelp[0m: try referring to `program` crate for guidance on how handle this unexpected cfg
+   [1m[94m= [0m[1mhelp[0m: the attribute macro `program` may come from an old version of the `anchor_attribute_program` crate, try updating your dependency with `cargo update -p anchor_attribute_program`
+   [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   [1m[94m= [0m[1mnote[0m: this warning originates in the attribute macro `program` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+  [1m[94m--> [0mprograms/leverage/src/lib.rs:27:1
+   [1m[94m|[0m
+[1m[94m27[0m [1m[94m|[0m #[program]
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+   [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+   [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+   [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+   [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:368:10
+    [1m[94m|[0m
+[1m[94m368[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:379:10
+    [1m[94m|[0m
+[1m[94m379[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:386:10
+    [1m[94m|[0m
+[1m[94m386[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:400:10
+    [1m[94m|[0m
+[1m[94m400[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:411:10
+    [1m[94m|[0m
+[1m[94m411[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:419:10
+    [1m[94m|[0m
+[1m[94m419[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:436:10
+    [1m[94m|[0m
+[1m[94m436[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:448:10
+    [1m[94m|[0m
+[1m[94m448[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:455:10
+    [1m[94m|[0m
+[1m[94m455[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: unexpected `cfg` condition value: `anchor-debug`[0m
+   [1m[94m--> [0mprograms/leverage/src/lib.rs:471:10
+    [1m[94m|[0m
+[1m[94m471[0m [1m[94m|[0m #[derive(Accounts)]
+    [1m[94m|[0m          [1m[33m^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: expected values for `feature` are: `cpi`, `default`, `devnet-test`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    [1m[94m= [0m[1mnote[0m: using a cfg inside a derive macro will use the cfgs from the destination crate and not the ones from the defining crate
+    [1m[94m= [0m[1mhelp[0m: try referring to `Accounts` crate for guidance on how handle this unexpected cfg
+    [1m[94m= [0m[1mhelp[0m: the derive macro `Accounts` may come from an old version of the `anchor_derive_accounts` crate, try updating your dependency with `cargo update -p anchor_derive_accounts`
+    [1m[94m= [0m[1mnote[0m: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    [1m[94m= [0m[1mnote[0m: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m[1m: use of deprecated method `anchor_lang::prelude::AccountInfo::<'a>::realloc`: Use AccountInfo::resize() instead[0m
+  [1m[94m--> [0mprograms/leverage/src/lib.rs:27:1
+   [1m[94m|[0m
+[1m[94m27[0m [1m[94m|[0m #[program]
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `#[warn(deprecated)]` on by default
+   [1m[94m= [0m[1mnote[0m: this warning originates in the attribute macro `program` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+[1m[33mwarning[0m: `leverage` (lib) generated 20 warnings (5 duplicates)
+[1m[92m    Finished[0m `release` profile [optimized] target(s) in 2.10s
+[1m[92m   Compiling[0m leverage v0.1.0 (/home/runner/work/hyperliquid/hyperliquid/programs/leverage)
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 1.01s
+[1m[92m     Running[0m unittests src/lib.rs (/home/runner/work/hyperliquid/hyperliquid/target/debug/build/leverage/b7c93b28f30666f8/out/leverage-b7c93b28f30666f8)
+target/deploy:
+total 340
+drwxr-xr-x 2 runner runner   4096 Oct 30 13:09 .
+drwxr-xr-x 8 runner runner   4096 Oct 30 13:08 ..
+-rw-r--r-- 1 runner runner    226 Oct 30 13:08 leverage-keypair.json
+-rwxr-xr-x 1 runner runner 335048 Oct 30 13:09 leverage.so
+
+target/idl:
+total 32
+drwxr-xr-x 2 runner runner  4096 Oct 30 13:09 .
+drwxr-xr-x 8 runner runner  4096 Oct 30 13:08 ..
+-rw-r--r-- 1 runner runner 23742 Oct 30 13:09 leverage.json

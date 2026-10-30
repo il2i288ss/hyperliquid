@@ -1,0 +1,7 @@
+Config File: /home/runner/.config/solana/cli/config.yml
+RPC URL: https://api.devnet.solana.com 
+WebSocket URL: wss://api.devnet.solana.com/ (computed)
+Keypair Path: /tmp/deployer.json 
+Commitment: confirmed 
+Reusing program id
+0.22605916 SOL
