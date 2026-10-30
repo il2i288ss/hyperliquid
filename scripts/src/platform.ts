@@ -40,7 +40,8 @@ export const SPLIT_BPS = {
 } as const;
 
 /** Main platform coin: 100% of the platform's share goes to the team wallet. */
-export const MAIN_COIN_POOL_FEE_BPS = 125; // ~1% net after Meteora's cut
+/** 3.75% paid by traders: 3% to the treasury after Meteora's 0.75% cut (same tax as platform coins). */
+export const MAIN_COIN_POOL_FEE_BPS = 375;
 
 export type SplitKey = keyof typeof SPLIT_BPS;
 
