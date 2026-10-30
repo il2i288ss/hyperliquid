@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  scripts:
+    name: Scripts (fees, rewards)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: scripts } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npm test
+      - run: npm run typecheck
+
+  app:
+    name: Website build
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: app } }
+    env:
+      NEXT_PUBLIC_RPC_URL: https://api.devnet.solana.com
+      NEXT_PUBLIC_NETWORK: devnet
+      NEXT_PUBLIC_DBC_CONFIG: So11111111111111111111111111111111111111112
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npm run build
+
+  program:
+    name: Long/short program (compile + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p leverage
