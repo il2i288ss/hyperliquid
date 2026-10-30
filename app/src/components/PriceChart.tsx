@@ -157,7 +157,7 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
           <button type="button" className={mode === "price" ? "on" : ""} aria-pressed={mode === "price"} onClick={() => setMode("price")}>Price</button>
         </div>
       </div>
-      <div style={{ position: "relative", height: 400 }}>
+      <div className="chart-box">
         <div ref={el} style={{ position: "absolute", inset: 0 }} />
       </div>
     </section>

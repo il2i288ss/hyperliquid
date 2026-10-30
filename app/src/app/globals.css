@@ -295,3 +295,29 @@ table.data td { padding: 10px 14px; border-top: 1px solid var(--line-soft); font
 .tf-menu button { all: unset; cursor: pointer; padding: 8px 12px; border-radius: 7px; font: 600 12px var(--sans); color: var(--text-2); }
 .tf-menu button:hover, .tf-menu button:focus-visible { background: var(--panel-2); color: var(--text); }
 .tf-menu button.on { background: var(--panel-2); color: var(--text); }
+
+/* ---- fit every laptop: scale to the screen instead of scrolling ---- */
+.chart-box { position: relative; height: clamp(260px, calc(100vh - 330px), 560px); }
+.hero { min-height: clamp(170px, 30vh, 300px); }
+.hero-content { padding: clamp(24px, 5vh, 48px) 20px; }
+.hero h1 { font-size: clamp(28px, min(5.2vw, 7vh), 56px); }
+@media (min-width: 1000px) {
+  /* trade box stays in view while the chart and tables scroll */
+  .split > .side { position: sticky; top: 72px; max-height: calc(100vh - 84px); overflow-y: auto; scrollbar-width: thin; }
+}
+@media (max-height: 820px) {
+  .topbar { min-height: 52px; padding-top: 6px; padding-bottom: 6px; }
+  .search { height: 38px; }
+  .search input { height: 36px; }
+  .wallet-btn { height: 36px; }
+  .strip { padding: 10px 16px; }
+  .avatar.lg { width: 60px; height: 60px; }
+  .grid-row, .grid-head { padding-top: 8px; padding-bottom: 8px; }
+  .avatar { width: 44px; height: 44px; }
+  .pad { padding: 10px 12px; }
+}
+@media (max-width: 1280px) {
+  .grid-head, .grid-row { grid-template-columns: minmax(200px, 2fr) 50px 1fr 1fr 1fr 1fr 72px; gap: 10px; }
+  .split > .side { flex-basis: 320px; }
+}
+html, body { overflow-x: hidden; }
