@@ -182,6 +182,37 @@ pub mod leverage {
         Ok(())
     }
 
+    /// Owner sets (or clears with 0) a stop loss and take profit, as coin
+    /// market caps in whole USD. Long: TP above, SL below. Short: the reverse.
+    pub fn set_triggers(ctx: Context<SetTriggers>, sl_mcap_usd: u64, tp_mcap_usd: u64) -> Result<()> {
+        let p = &mut ctx.accounts.position;
+        p.sl_mcap_usd = sl_mcap_usd;
+        p.tp_mcap_usd = tp_mcap_usd;
+        emit!(TriggersSet { owner: p.owner, market: p.market, sl_mcap_usd, tp_mcap_usd });
+        Ok(())
+    }
+
+    /// Permissionless: anyone (normally the keeper) can close a position whose
+    /// stop loss or take profit was hit. The payout always goes to the owner,
+    /// exactly as if they had closed it themselves.
+    pub fn trigger_close(ctx: Context<TriggerClose>) -> Result<()> {
+        let now = Clock::get()?.unix_timestamp;
+        let p = &ctx.accounts.position;
+        let tier = &TIERS[p.tier as usize];
+        require!(now - p.opened_at >= tier.min_hold_secs as i64, ErrorCode::HoldTime);
+        let m = &ctx.accounts.market;
+        let price = m.twap(now, tier.twap_window_secs as i64)?;
+        let mcap = mcap_usd(price, m.supply, ctx.accounts.global.sol_usd_e6);
+        let hit = trigger_hit(p.long, mcap, p.sl_mcap_usd, p.tp_mcap_usd);
+        require!(hit != Trigger::None, ErrorCode::NotTriggered);
+        let (raw, _) = position_pnl(m, p, now)?;
+        let payout = settle(p.margin, raw, tier.profit_cap_x, fee(p.notional, tier.fee_bps));
+        let owner = ctx.accounts.owner.to_account_info();
+        finish(&mut ctx.accounts.market, &mut ctx.accounts.vault, p, &owner, payout)?;
+        emit!(PositionClosed { owner: p.owner, market: p.market, pnl: raw as i64, payout, liquidated: false });
+        Ok(())
+    }
+
     /// Permissionless: anyone can liquidate a position that lost 90% of its
     /// margin and earns 10% of whatever margin is left.
     pub fn liquidate(ctx: Context<Liquidate>) -> Result<()> {
@@ -327,6 +358,9 @@ pub struct Position {
     pub opened_at: i64,
     pub tier: u8,
     pub bump: u8,
+    /// Stop loss / take profit as coin market cap in whole USD (0 = off).
+    pub sl_mcap_usd: u64,
+    pub tp_mcap_usd: u64,
 }
 
 // ---------- contexts ----------
@@ -412,6 +446,29 @@ pub struct ClosePosition<'info> {
 }
 
 #[derive(Accounts)]
+pub struct SetTriggers<'info> {
+    pub owner: Signer<'info>,
+    #[account(mut, has_one = owner)]
+    pub position: Account<'info, Position>,
+}
+
+#[derive(Accounts)]
+pub struct TriggerClose<'info> {
+    pub caller: Signer<'info>,
+    /// CHECK: receives the payout and the position account's rent
+    #[account(mut, address = position.owner)]
+    pub owner: UncheckedAccount<'info>,
+    #[account(seeds = [b"global"], bump = global.bump)]
+    pub global: Account<'info, Global>,
+    #[account(mut, seeds = [b"vault"], bump = vault.bump)]
+    pub vault: Account<'info, Vault>,
+    #[account(mut, seeds = [b"market", market.mint.as_ref()], bump = market.bump)]
+    pub market: Account<'info, Market>,
+    #[account(mut, close = owner, has_one = market)]
+    pub position: Account<'info, Position>,
+}
+
+#[derive(Accounts)]
 pub struct Liquidate<'info> {
     #[account(mut)]
     pub liquidator: Signer<'info>,
@@ -447,6 +504,14 @@ pub struct PositionClosed {
     pub liquidated: bool,
 }
 
+#[event]
+pub struct TriggersSet {
+    pub owner: Pubkey,
+    pub market: Pubkey,
+    pub sl_mcap_usd: u64,
+    pub tp_mcap_usd: u64,
+}
+
 #[error_code]
 pub enum ErrorCode {
     #[msg("New positions are paused")] Paused,
@@ -463,4 +528,5 @@ pub enum ErrorCode {
     #[msg("Pool byte offsets not configured")] PoolLayoutNotSet,
     #[msg("Math overflow")] MathOverflow,
     #[msg("Unauthorized")] Unauthorized,
+    #[msg("Stop loss / take profit not reached")] NotTriggered,
 }

@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { closePositionIx, leverageError, type Position } from "@/lib/leverage";
+import { closePositionIx, leverageError, setTriggersIx, type Position } from "@/lib/leverage";
 import { TEST_HOLD_SECS, TIERS } from "@/lib/tiers";
 import { explorer } from "@/lib/config";
-import { price } from "@/lib/format";
+import { parseUsd, price, usd } from "@/lib/format";
 import type { Coin } from "@/lib/coins";
 
 /** Raw-unit entry price (lamports per raw token, scaled) -> SOL per whole token. */
@@ -20,6 +20,7 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
   const [now, setNow] = useState(() => Date.now() / 1000);
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState<{ ok?: string; err?: string; sig?: string }>({});
+  const [edit, setEdit] = useState<{ id: string; tp: string; sl: string } | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now() / 1000), 1000);
@@ -45,12 +46,40 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
     }
   }
 
+  async function saveTriggers(p: Position) {
+    if (!edit) return;
+    const tp = parseUsd(edit.tp);
+    const sl = parseUsd(edit.sl);
+    const mc = coin.mcapUsd;
+    const bad =
+      (edit.tp && !tp) || (edit.sl && !sl) ? "Enter market caps like 250k or 1.5m (or leave empty)." :
+      tp && (p.long ? tp <= mc : tp >= mc) ? `Take profit must be ${p.long ? "above" : "below"} the current market cap (${usd(mc)}).` :
+      sl && (p.long ? sl >= mc : sl <= mc) ? `Stop loss must be ${p.long ? "below" : "above"} the current market cap (${usd(mc)}).` :
+      "";
+    if (bad) return setMsg({ err: bad });
+    setBusy(p.address.toBase58());
+    setMsg({});
+    try {
+      const sig = await sendTransaction(new Transaction().add(setTriggersIx(publicKey!, new PublicKey(coin.mint), p.nonce, sl, tp)), connection);
+      await connection.confirmTransaction(sig, "confirmed");
+      setMsg({ ok: tp || sl ? "Take profit / stop loss saved." : "Take profit / stop loss removed.", sig });
+      setEdit(null);
+      onDone();
+    } catch (e) {
+      setMsg({ err: leverageError(e) });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  const fmt = (v: number) => (v ? usd(v) : "—");
+
   return (
     <div>
       <div className="table-wrap">
         <table className="data">
           <thead>
-            <tr><th>Side</th><th>Size</th><th>Margin</th><th>Entry</th><th>Mark</th><th>Liq. price</th><th>PnL (est.)</th><th><span className="sr">Action</span></th></tr>
+            <tr><th>Side</th><th>Size</th><th>Margin</th><th>Entry</th><th>Mark</th><th>Liq. price</th><th>PnL (est.)</th><th>TP / SL (MC)</th><th><span className="sr">Action</span></th></tr>
           </thead>
           <tbody>
             {positions.map((p) => {
@@ -71,6 +100,20 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
                   <td>{price(coin.priceSol * solUsd)}</td>
                   <td className="warn">{price(liq * solUsd)}</td>
                   <td className={pnl >= 0 ? "up" : "down"}>{pnl >= 0 ? "+" : "−"}{Math.abs(pnl).toFixed(4)} SOL ({((pnl / p.margin) * 100).toFixed(0)}%)</td>
+                  <td>
+                    {edit?.id === id ? (
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <input className="input" style={{ width: 90, minHeight: 32, fontSize: 12, padding: "4px 8px" }} aria-label="Take profit market cap" placeholder="TP" value={edit.tp} onChange={(e) => setEdit({ ...edit, tp: e.target.value })} />
+                        <input className="input" style={{ width: 90, minHeight: 32, fontSize: 12, padding: "4px 8px" }} aria-label="Stop loss market cap" placeholder="SL" value={edit.sl} onChange={(e) => setEdit({ ...edit, sl: e.target.value })} />
+                        <button type="button" className="btn" disabled={busy === id} onClick={() => saveTriggers(p)}>Save</button>
+                        <button type="button" className="btn" onClick={() => setEdit(null)}>Cancel</button>
+                      </div>
+                    ) : (
+                      <button type="button" className="copy" style={{ fontFamily: "var(--mono)" }} onClick={() => setEdit({ id, tp: p.tpMcapUsd ? String(p.tpMcapUsd) : "", sl: p.slMcapUsd ? String(p.slMcapUsd) : "" })} aria-label="Edit take profit and stop loss">
+                        <span className="up">{fmt(p.tpMcapUsd)}</span> / <span className="down">{fmt(p.slMcapUsd)}</span> ✎
+                      </button>
+                    )}
+                  </td>
                   <td style={{ textAlign: "right" }}>
                     <button type="button" className="btn" disabled={wait > 0 || busy === id} onClick={() => close(p)}>
                       {busy === id ? "Closing…" : wait > 0 ? `Close in ${wait}s` : "Close"}

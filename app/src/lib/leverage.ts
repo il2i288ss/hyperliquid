@@ -18,6 +18,7 @@ import { txError } from "./txError";
 const DISC = {
   open_position: [135, 128, 47, 77, 15, 152, 240, 49],
   close_position: [123, 134, 81, 0, 49, 68, 98, 98],
+  set_triggers: [28, 175, 115, 134, 112, 29, 71, 250],
   Position: [170, 188, 143, 228, 122, 64, 247, 208],
 } as const;
 
@@ -53,6 +54,16 @@ export function closePositionIx(owner: PublicKey, mint: PublicKey, nonce: bigint
     programId: LEVERAGE_PROGRAM,
     keys: [w(owner, true), w(vaultPda()), w(market), w(positionPda(market, owner, nonce))],
     data: Buffer.from(DISC.close_position),
+  });
+}
+
+/** Stop loss / take profit as coin market cap in whole USD (0 = off). */
+export function setTriggersIx(owner: PublicKey, mint: PublicKey, nonce: bigint, slMcapUsd: number, tpMcapUsd: number) {
+  const market = marketPda(mint);
+  return new TransactionInstruction({
+    programId: LEVERAGE_PROGRAM,
+    keys: [{ pubkey: owner, isSigner: true, isWritable: false }, w(positionPda(market, owner, nonce))],
+    data: Buffer.concat([Buffer.from(DISC.set_triggers), u64(BigInt(Math.max(0, Math.round(slMcapUsd)))), u64(BigInt(Math.max(0, Math.round(tpMcapUsd))))]),
   });
 }
 
@@ -113,7 +124,10 @@ export function decodePosition(data: Buffer) {
   const entryPrice = Number(rd.u128()) / PRICE_SCALE; // lamports per raw token unit
   const openedAt = Number(rd.i64());
   const tier = rd.u8();
-  return { owner, market, nonce, long, margin, notional, entryPrice, openedAt, tier };
+  rd.u8(); // bump
+  const slMcapUsd = Number(rd.u64());
+  const tpMcapUsd = Number(rd.u64());
+  return { owner, market, nonce, long, margin, notional, entryPrice, openedAt, tier, slMcapUsd, tpMcapUsd };
 }
 
 /** All open positions of a wallet. */
@@ -130,7 +144,7 @@ export async function fetchPositions(connection: Connection, owner: PublicKey): 
 const ERRORS = [
   "Paused", "MarketDisabled", "TierLocked", "TooMuchLeverage", "MarginTooBig", "CapReached",
   "HoldTime", "NotLiquidatable", "StalePrice", "VaultEmpty", "BadPool", "PoolLayoutNotSet",
-  "MathOverflow", "Unauthorized",
+  "MathOverflow", "Unauthorized", "NotTriggered",
 ];
 const FRIENDLY: Record<string, string> = {
   Paused: "New positions are paused right now.",
@@ -142,6 +156,7 @@ const FRIENDLY: Record<string, string> = {
   HoldTime: "Positions must be held for the minimum time before closing.",
   StalePrice: "Not enough price history yet. Try again in a minute.",
   VaultEmpty: "The vault can't cover this payout right now.",
+  NotTriggered: "Stop loss / take profit not reached yet.",
 };
 /** Human message for a failed long/short transaction. */
 export function leverageError(e: unknown): string {

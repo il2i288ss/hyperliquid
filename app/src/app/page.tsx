@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CoinAvatar } from "@/components/CoinAvatar";
+import { CopyButton } from "@/components/CopyButton";
 import { age, price, usd } from "@/lib/format";
 import { tierFor } from "@/lib/tiers";
 import { useCoins } from "@/lib/useCoins";
@@ -38,10 +39,11 @@ function Row({ c }: { c: Coin }) {
   return (
     <Link href={`/coin/${c.mint}`} className="grid-row">
       <div className="who">
-        <CoinAvatar mint={c.mint} name={c.name} />
+        <CoinAvatar mint={c.mint} name={c.name} image={c.image} />
         <div>
           <b>{c.name}</b>
           <span className="muted" style={{ fontSize: 12 }}>${c.symbol}</span>
+          <span style={{ marginLeft: -6 }}><CopyButton value={c.mint} label="" /></span>
         </div>
       </div>
       <div><span className="cell-label">Age</span>{age(c.ageSeconds)}</div>

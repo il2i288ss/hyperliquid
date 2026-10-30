@@ -4,7 +4,8 @@
  *   prices     every  8 s  record each long/short coin's pool price on-chain
  *   markets    every 60 s  register coins that reached enough liquidity for
  *                          long/short; switch leverage off when a coin graduates
- *   liquidate  every 10 s  close positions that lost 90% of their margin
+ *   liquidate  every 10 s  close positions that lost 90% of their margin, and
+ *                          positions whose stop loss / take profit was hit
  *   solprice   every  5 m  keep the on-chain SOL/USD (used for tiers) current
  *   snapshot   every  3 m  holder balances (random offset)       [REWARDS=on]
  *   payout     every 15 m  claim fees -> split -> pay holders     [REWARDS=on]
@@ -134,6 +135,10 @@ async function liquidateJob() {
     markets(),
   ]);
   const byAddress = new Map(mkts.map((m) => [m.address.toBase58(), m]));
+  const g = await connection.getAccountInfo(lev.global);
+  const solUsd = g ? Number(g.data.readBigUInt64LE(72)) / 1e6 : 0;
+  const testMode = g ? g.data[81] === 1 : false;
+  const nowSec = Date.now() / 1000;
   for (const { account } of positions) {
     const p = decodePosition(account.data as Buffer);
     const m = byAddress.get(p.market.toBase58());
@@ -142,6 +147,24 @@ async function liquidateJob() {
     if (!latest || latest.price === 0n) continue;
     const ratio = Number(latest.price) / Number(p.entryPrice);
     const pnl = p.long ? Number(p.notional) * (ratio - 1) : Number(p.notional) * (1 - ratio);
+    // Stop loss / take profit: the program checks the averaged price exactly.
+    const holdSecs = testMode ? 5 : p.tier === 0 ? 180 : 60;
+    if ((p.slMcapUsd > 0n || p.tpMcapUsd > 0n) && solUsd > 0 && nowSec - Number(p.openedAt) >= holdSecs) {
+      const mcap = ((Number(latest.price) / 1e12) * Number(m.supply) * solUsd) / 1e9;
+      const sl = Number(p.slMcapUsd);
+      const tp = Number(p.tpMcapUsd);
+      const near = (t: number, above: boolean) => t > 0 && (above ? mcap >= t * 0.995 : mcap <= t * 1.005);
+      const hit = p.long ? near(tp, true) || near(sl, false) : near(tp, false) || near(sl, true);
+      if (hit) {
+        const ok = await send([lev.triggerClose(keeper.publicKey, p.owner, m.mint, p.nonce)])
+          .then((sig) => (log("triggers", `closed ${p.owner.toBase58()} on ${m.mint.toBase58()} at ~$${Math.round(mcap)} MC: ${sig}`), true))
+          .catch((e) => {
+            if (!["NotTriggered", "HoldTime", "StalePrice"].includes(programError(e) ?? "")) throw e;
+            return false;
+          });
+        if (ok) continue;
+      }
+    }
     // Try once the spot loss is near 90%; the program does the exact check.
     if (pnl <= -0.85 * Number(p.margin)) {
       await send([lev.liquidate(keeper.publicKey, p.owner, m.mint, p.nonce)])

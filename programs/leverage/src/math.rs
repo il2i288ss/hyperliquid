@@ -134,6 +134,21 @@ pub fn settle(margin: u64, raw_pnl: i128, profit_cap_x: u8, close_fee: u64) -> u
     out.max(0) as u64
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Trigger { None, StopLoss, TakeProfit }
+
+/// Which (if any) of a position's market-cap triggers is hit. 0 = not set.
+/// Long: take profit at or above `tp`, stop loss at or below `sl`.
+/// Short: take profit at or below `tp`, stop loss at or above `sl`.
+pub fn trigger_hit(long: bool, mcap_usd: u64, sl: u64, tp: u64) -> Trigger {
+    let (tp_hit, sl_hit) = if long {
+        (tp > 0 && mcap_usd >= tp, sl > 0 && mcap_usd <= sl)
+    } else {
+        (tp > 0 && mcap_usd <= tp, sl > 0 && mcap_usd >= sl)
+    };
+    if sl_hit { Trigger::StopLoss } else if tp_hit { Trigger::TakeProfit } else { Trigger::None }
+}
+
 pub fn is_liquidatable(margin: u64, raw_pnl: i128) -> bool {
     raw_pnl <= -((margin as u128 * LIQ_LOSS_BPS / BPS) as i128)
 }
@@ -300,5 +315,20 @@ mod tests {
         // raw move is +10 SOL; virtual impact + fees cost a max-size
         // position roughly a third of that, which is the price of safety.
         assert!(net > sol(6) as i128, "net {net}");
+    }
+
+    #[test]
+    fn triggers_by_market_cap() {
+        // long at ~$200K: TP $300K, SL $150K
+        assert_eq!(trigger_hit(true, 200_000, 150_000, 300_000), Trigger::None);
+        assert_eq!(trigger_hit(true, 300_000, 150_000, 300_000), Trigger::TakeProfit);
+        assert_eq!(trigger_hit(true, 149_000, 150_000, 300_000), Trigger::StopLoss);
+        // short at ~$200K: TP $120K, SL $260K
+        assert_eq!(trigger_hit(false, 200_000, 260_000, 120_000), Trigger::None);
+        assert_eq!(trigger_hit(false, 119_000, 260_000, 120_000), Trigger::TakeProfit);
+        assert_eq!(trigger_hit(false, 270_000, 260_000, 120_000), Trigger::StopLoss);
+        // unset triggers never fire
+        assert_eq!(trigger_hit(true, 0, 0, 0), Trigger::None);
+        assert_eq!(trigger_hit(false, u64::MAX, 0, 0), Trigger::None);
     }
 }

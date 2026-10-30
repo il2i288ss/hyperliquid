@@ -38,3 +38,10 @@ export const tint = (key: string) => {
   const [bg, fg] = TINTS[h % TINTS.length];
   return { background: bg, color: fg };
 };
+
+/** "250k", "$1.2M", "300,000" -> 300000. Empty or invalid -> 0. */
+export const parseUsd = (s: string) => {
+  const m = s.trim().replace(/[$,\s]/g, "").toLowerCase().match(/^(\d*\.?\d+)([kmb]?)$/);
+  if (!m) return 0;
+  return Number(m[1]) * ({ "": 1, k: 1e3, m: 1e6, b: 1e9 } as const)[m[2] as "" | "k" | "m" | "b"];
+};

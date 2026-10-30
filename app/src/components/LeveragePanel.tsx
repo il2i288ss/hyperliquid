@@ -5,9 +5,9 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { explorer } from "@/lib/config";
-import { leverageError, openPositionIx } from "@/lib/leverage";
+import { leverageError, openPositionIx, setTriggersIx } from "@/lib/leverage";
 import { TEST_HOLD_SECS, tierFor } from "@/lib/tiers";
-import { price, sol } from "@/lib/format";
+import { parseUsd, price, sol, usd } from "@/lib/format";
 import type { Coin } from "@/lib/coins";
 import type { LeverageState } from "@/lib/useLeverage";
 
@@ -21,6 +21,8 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
   const [long, setLong] = useState(true);
   const [margin, setMargin] = useState("0.1");
   const [leverage, setLeverage] = useState(2);
+  const [tpText, setTpText] = useState("");
+  const [slText, setSlText] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok?: string; err?: string; sig?: string }>({});
 
@@ -58,7 +60,26 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
   const fee = (size * tier.feePct) / 100;
   const hold = test ? TEST_HOLD_SECS : tier.minHoldSecs;
 
+  // Take profit / stop loss, as market caps.
+  const mcap = coin.mcapUsd;
+  const entryMcap = spot > 0 ? mcap * (entry / spot) : mcap;
+  const liqMcap = spot > 0 ? mcap * (liq / spot) : 0;
+  const tp = parseUsd(tpText);
+  const sl = parseUsd(slText);
+  const pnlAt = (target: number) => (entryMcap > 0 ? (long ? size * (target / entryMcap - 1) : size * (1 - target / entryMcap)) : 0);
+  const capPnl = (v: number) => Math.min(v, marginSol * tier.profitCapX);
+  const trigProblem =
+    tpText && !tp ? "Take profit: enter a market cap like 250k or 1.5m." :
+    slText && !sl ? "Stop loss: enter a market cap like 80k." :
+    tp && long && tp <= mcap ? "Take profit must be above the current market cap for a long." :
+    tp && !long && tp >= mcap ? "Take profit must be below the current market cap for a short." :
+    sl && long && sl >= mcap ? "Stop loss must be below the current market cap for a long." :
+    sl && !long && sl <= mcap ? "Stop loss must be above the current market cap for a short." :
+    "";
+  const slAfterLiq = sl > 0 && (long ? sl <= liqMcap : sl >= liqMcap);
+
   const problem =
+    trigProblem ? trigProblem :
     lev.global?.paused ? "New positions are paused right now." :
     degenLocked ? `New coins unlock long/short after ${test ? "1 minute" : "30 minutes"} and ${test ? DEGEN_MIN_POOL.test : DEGEN_MIN_POOL.real} SOL of liquidity.` :
     marginSol > tier.maxMarginSol ? `Max margin on this coin is ${tier.maxMarginSol} SOL.` :
@@ -72,12 +93,15 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
     if (problem) return setMsg({ err: problem });
     setBusy(true);
     try {
-      const tx = new Transaction().add(
-        openPositionIx(publicKey, new PublicKey(coin.mint), BigInt(Date.now()), long, BigInt(Math.round(marginSol * 1e9)), lev2),
-      );
+      const nonce = BigInt(Date.now());
+      const mintKey = new PublicKey(coin.mint);
+      const tx = new Transaction().add(openPositionIx(publicKey, mintKey, nonce, long, BigInt(Math.round(marginSol * 1e9)), lev2));
+      if (tp || sl) tx.add(setTriggersIx(publicKey, mintKey, nonce, sl, tp));
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction(sig, "confirmed");
-      setMsg({ ok: `Opened ${long ? "long" : "short"} ${lev2}x.`, sig });
+      setMsg({ ok: `Opened ${long ? "long" : "short"} ${lev2}x${tp || sl ? " with " + [tp && `TP ${usd(tp)}`, sl && `SL ${usd(sl)}`].filter(Boolean).join(" / ") : ""}.`, sig });
+      setTpText("");
+      setSlText("");
       onDone();
     } catch (e) {
       setMsg({ err: leverageError(e) });
@@ -113,10 +137,31 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
         </div>
       </div>
 
+      <div className="field">
+        <span>Take profit / stop loss at market cap (optional) · now {usd(mcap)}</span>
+        <div className="trig">
+          <label className="field">
+            <span className="up" style={{ fontSize: 11 }}>Take profit at MC</span>
+            <input className="input" inputMode="decimal" placeholder={long ? `e.g. ${usd(mcap * 2).replace("$", "")}` : `e.g. ${usd(mcap / 2).replace("$", "")}`} value={tpText} onChange={(e) => setTpText(e.target.value)} />
+          </label>
+          <label className="field">
+            <span className="down" style={{ fontSize: 11 }}>Stop loss at MC</span>
+            <input className="input" inputMode="decimal" placeholder={long ? `e.g. ${usd(mcap * 0.8).replace("$", "")}` : `e.g. ${usd(mcap * 1.2).replace("$", "")}`} value={slText} onChange={(e) => setSlText(e.target.value)} />
+          </label>
+        </div>
+        {(tp > 0 || sl > 0) && !trigProblem && (
+          <p className="note">
+            {tp > 0 && <>At {usd(tp)}: <b className="up">≈ +{capPnl(pnlAt(tp)).toFixed(3)} SOL</b>. </>}
+            {sl > 0 && <>At {usd(sl)}: <b className="down">≈ {Math.max(pnlAt(sl), -marginSol).toFixed(3)} SOL</b>.</>}
+            {slAfterLiq && <span className="warn"> This stop is past your liquidation point (~{usd(liqMcap)}), so liquidation would hit first.</span>}
+          </p>
+        )}
+      </div>
+
       <div className="rows">
         <div><span>Position size</span><span>{sol(size)}</span></div>
         <div><span>Entry price (incl. impact)</span><span>{usdPrice(entry)}</span></div>
-        <div><span>Liquidation price</span><span className="warn">{usdPrice(liq)}</span></div>
+        <div><span>Liquidation price</span><span className="warn">{usdPrice(liq)} · MC {usd(liqMcap)}</span></div>
         <div><span>Open fee ({tier.feePct}%)</span><span>{sol(fee, 4)}</span></div>
         <div><span>Max profit ({tier.profitCapX}x margin)</span><span>{sol(marginSol * tier.profitCapX)}</span></div>
         <div><span>{long ? "Long" : "Short"} capacity left</span><span>{sol(left)}</span></div>
@@ -130,7 +175,8 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
       {msg.err && <p className="msg-err" role="alert">{msg.err}</p>}
       <p className="note">
         Wins are paid in SOL from the long/short vault. Your position never buys or sells the coin, so it doesn&apos;t move the chart.
-        Minimum hold {hold} s. Liquidated at 90% loss.
+        Minimum hold {hold} s. Liquidated at 90% loss. Take profit / stop loss is checked every few seconds against the
+        averaged price and closed for you once the hold time has passed; the SOL goes straight to your wallet.
       </p>
     </div>
   );

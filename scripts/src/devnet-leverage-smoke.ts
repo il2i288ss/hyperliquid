@@ -228,6 +228,28 @@ async function main() {
     // keep the books clean for the next run
     await send([lev.closePosition(admin.publicKey, mint.publicKey, 4n)]).catch(() => {});
   }
+  // 8. Take profit / stop loss by market cap, fired by anyone (normally the keeper)
+  await send([lev.openPosition(admin.publicKey, mint.publicKey, 5n, true, margin, 3)]);
+  await send([lev.setTriggers(admin.publicKey, mint.publicKey, 5n, 0n, 1_000_000_000_000n)]);
+  const p5 = decodePosition((await connection.getAccountInfo(lev.position(marketKey, admin.publicKey, 5n)))!.data);
+  check("take profit saved on position", p5.tpMcapUsd === 1_000_000_000_000n && p5.slMcapUsd === 0n, `TP $${p5.tpMcapUsd}, SL $${p5.slMcapUsd}`);
+  await expectError("TP/SL can't close before hold time", [lev.triggerClose(admin.publicKey, admin.publicKey, mint.publicKey, 5n)], "HoldTime");
+  await updatePrices(12);
+  await expectError("unreached take profit can't close", [lev.triggerClose(admin.publicKey, admin.publicKey, mint.publicKey, 5n)], "NotTriggered");
+  await send([lev.setTriggers(admin.publicKey, mint.publicKey, 5n, 0n, 1n)]); // TP at $1 MC: already above
+  const ownerBefore = await lamports(admin.publicKey);
+  await send([lev.triggerClose(admin.publicKey, admin.publicKey, mint.publicKey, 5n)]);
+  check(
+    "take profit closes long, pays owner",
+    (await connection.getAccountInfo(lev.position(marketKey, admin.publicKey, 5n))) === null && (await lamports(admin.publicKey)) > ownerBefore,
+    `owner +${Number((await lamports(admin.publicKey)) - ownerBefore) / LAMPORTS_PER_SOL} SOL`,
+  );
+  await send([lev.openPosition(admin.publicKey, mint.publicKey, 6n, false, margin, 3)]);
+  await send([lev.setTriggers(admin.publicKey, mint.publicKey, 6n, 1n, 0n)]); // short SL at $1 MC: already above
+  await updatePrices(12);
+  await send([lev.triggerClose(admin.publicKey, admin.publicKey, mint.publicKey, 6n)]);
+  check("stop loss closes short", (await connection.getAccountInfo(lev.position(marketKey, admin.publicKey, 6n))) === null, "closed by trigger");
+
   const vaultAfter = decodeVault((await connection.getAccountInfo(lev.vault))!.data);
   const mEnd = decodeMarket((await connection.getAccountInfo(marketKey))!.data);
   check("books balanced (no open interest left)", mEnd.oiLong === 0n && mEnd.oiShort === 0n, `long ${mEnd.oiLong}, short ${mEnd.oiShort}, locked margin ${vaultAfter.lockedMargin}`);

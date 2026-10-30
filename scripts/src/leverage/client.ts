@@ -88,6 +88,22 @@ export class LeverageClient {
     const market = this.market(mint);
     return this.ix("close_position", [w(owner, true), w(this.vault), w(market), w(this.position(market, owner, nonce))]);
   }
+  /** Stop loss / take profit as coin market cap in whole USD (0 = off). */
+  setTriggers(owner: PublicKey, mint: PublicKey, nonce: bigint, slMcapUsd: bigint, tpMcapUsd: bigint) {
+    const market = this.market(mint);
+    return this.ix("set_triggers", [r(owner, true), w(this.position(market, owner, nonce))], [u64(slMcapUsd), u64(tpMcapUsd)]);
+  }
+  triggerClose(caller: PublicKey, owner: PublicKey, mint: PublicKey, nonce: bigint) {
+    const market = this.market(mint);
+    return this.ix("trigger_close", [
+      r(caller, true),
+      w(owner),
+      r(this.global),
+      w(this.vault),
+      w(market),
+      w(this.position(market, owner, nonce)),
+    ]);
+  }
   liquidate(liquidator: PublicKey, owner: PublicKey, mint: PublicKey, nonce: bigint) {
     const market = this.market(mint);
     return this.ix("liquidate", [
@@ -150,6 +166,9 @@ export function decodePosition(data: Buffer) {
     entryPrice: r.u128(),
     openedAt: r.i64(),
     tier: r.u8(),
+    bump: r.u8(),
+    slMcapUsd: r.u64(),
+    tpMcapUsd: r.u64(),
   };
 }
 
@@ -157,7 +176,7 @@ export function decodePosition(data: Buffer) {
 export const ERRORS = [
   "Paused", "MarketDisabled", "TierLocked", "TooMuchLeverage", "MarginTooBig", "CapReached",
   "HoldTime", "NotLiquidatable", "StalePrice", "VaultEmpty", "BadPool", "PoolLayoutNotSet",
-  "MathOverflow", "Unauthorized",
+  "MathOverflow", "Unauthorized", "NotTriggered",
 ] as const;
 
 /** Extract our program's error name from a failed transaction, if any. */

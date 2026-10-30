@@ -31,7 +31,57 @@ export type Coin = {
   ageSeconds: number;
   /** Long/short is registered and enabled for this coin. */
   leverage: boolean;
+  image: string;
+  description: string;
+  links: { website?: string; twitter?: string; telegram?: string };
 };
+
+type OffChain = { image: string; description: string; links: Coin["links"] };
+const offChain = new Map<string, OffChain>();
+const ipfs = (u: string) => (u.startsWith("ipfs://") ? `https://gateway.pinata.cloud/ipfs/${u.slice(7)}` : u);
+const safeUrl = (u: unknown) => (typeof u === "string" && /^https:\/\//.test(ipfs(u)) ? ipfs(u) : "");
+
+/** Image, description and links from the metadata JSON (cached forever per uri). */
+async function loadOffChain(uris: string[]) {
+  const todo = [...new Set(uris)].filter((u) => u && !offChain.has(u)).slice(0, 40);
+  await Promise.all(
+    todo.map(async (uri) => {
+      try {
+        const r = await fetch(ipfs(uri), { signal: AbortSignal.timeout(4_000) });
+        const j = await r.json();
+        const ext = j.extensions ?? {};
+        offChain.set(uri, {
+          image: safeUrl(j.image),
+          description: typeof j.description === "string" ? j.description.slice(0, 500) : "",
+          links: { website: safeUrl(ext.website) || undefined, twitter: safeUrl(ext.twitter) || undefined, telegram: safeUrl(ext.telegram) || undefined },
+        });
+      } catch {
+        /* try again next refresh */
+      }
+    }),
+  );
+}
+
+let usdCache: { at: number; v: number } | null = null;
+/** Live SOL/USD for display (Coinbase, then Kraken), cached 60 s. */
+async function liveSolUsd(): Promise<number | null> {
+  if (usdCache && Date.now() - usdCache.at < 60_000) return usdCache.v;
+  for (const [url, pick] of [
+    ["https://api.coinbase.com/v2/prices/SOL-USD/spot", (j: any) => Number(j.data.amount)],
+    ["https://api.kraken.com/0/public/Ticker?pair=SOLUSD", (j: any) => Number((Object.values(j.result)[0] as { c: string[] }).c[0])],
+  ] as const) {
+    try {
+      const v = pick(await (await fetch(url, { signal: AbortSignal.timeout(4_000) })).json());
+      if (v > 1 && v < 100_000) {
+        usdCache = { at: Date.now(), v };
+        return v;
+      }
+    } catch {
+      /* next source */
+    }
+  }
+  return usdCache?.v ?? null;
+}
 
 const metadataPda = (mint: PublicKey) =>
   PublicKey.findProgramAddressSync([Buffer.from("metadata"), METAPLEX.toBuffer(), mint.toBuffer()], METAPLEX)[0];
@@ -58,10 +108,12 @@ function priceFromSqrt(sqrt: { toString(): string }) {
 }
 
 export async function solUsd(connection: Connection) {
-  if (!LEVERAGE_ENABLED) return FALLBACK_SOL_USD;
-  const info = await connection.getAccountInfo(globalPda());
+  const info = LEVERAGE_ENABLED ? await connection.getAccountInfo(globalPda()).catch(() => null) : null;
   const g = info ? decodeGlobal(info.data as Buffer) : null;
-  return g && g.solUsd > 0 ? g.solUsd : FALLBACK_SOL_USD;
+  // The on-chain rate is what long/short tiers use. Devnet test builds set a
+  // fake price on purpose, so use it there; otherwise prefer the live price.
+  if (g?.testBuild && g.solUsd > 0) return g.solUsd;
+  return (await liveSolUsd()) ?? (g && g.solUsd > 0 ? g.solUsd : FALLBACK_SOL_USD);
 }
 
 let cache: { at: number; coins: Coin[] } | null = null;
@@ -99,6 +151,8 @@ export async function listCoins(): Promise<Coin[]> {
     });
   }
 
+  await loadOffChain(metas.map((m) => m?.uri ?? ""));
+
   const coins = pools.map(({ publicKey, account }, i): Coin => {
     const s = account.poolState;
     const priceSol = priceFromSqrt(s.sqrtPrice);
@@ -119,6 +173,9 @@ export async function listCoins(): Promise<Coin[]> {
       graduated: Boolean(s.isMigrated),
       ageSeconds: Math.max(0, (slot - toNum(s.activationPoint)) * SLOT_SECONDS),
       leverage: enabled.has(mints[i].toBase58()),
+      image: offChain.get(meta?.uri ?? "")?.image ?? "",
+      description: offChain.get(meta?.uri ?? "")?.description ?? "",
+      links: offChain.get(meta?.uri ?? "")?.links ?? {},
     };
   });
   coins.sort((a, b) => a.ageSeconds - b.ageSeconds);

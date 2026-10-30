@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CoinAvatar } from "@/components/CoinAvatar";
+import { CopyButton } from "@/components/CopyButton";
+import { VaultCard } from "@/components/VaultCard";
 import { SpotPanel } from "@/components/SpotPanel";
 import { LeveragePanel } from "@/components/LeveragePanel";
 import { PositionsTable } from "@/components/PositionsTable";
@@ -74,16 +76,20 @@ export default function CoinPage() {
     <>
       <section className="strip">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <CoinAvatar mint={coin.mint} name={coin.name} large />
+          <CoinAvatar mint={coin.mint} name={coin.name} image={coin.image} large expandable />
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{coin.name}</h1>
               <span className="muted">${coin.symbol}</span>
-              {coin.leverage && <span className="badge">Long/Short · up to {tier.leverage}x</span>}
+              {coin.leverage && <span className="badge ls">Long/Short · up to {tier.leverage}x</span>}
               {coin.graduated && <span className="badge grad">Graduated</span>}
             </div>
-            <div className="muted" style={{ fontSize: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <a href={explorer("address", coin.mint)} target="_blank" rel="noreferrer" className="mono">{short(coin.mint)}</a>
+            <div className="muted" style={{ fontSize: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <CopyButton value={coin.mint} />
+              <a href={explorer("address", coin.mint)} target="_blank" rel="noreferrer">Solscan</a>
+              {coin.links.website && <a href={coin.links.website} target="_blank" rel="noreferrer nofollow">Website</a>}
+              {coin.links.twitter && <a href={coin.links.twitter} target="_blank" rel="noreferrer nofollow">X</a>}
+              {coin.links.telegram && <a href={coin.links.telegram} target="_blank" rel="noreferrer nofollow">Telegram</a>}
               <span>{age(coin.ageSeconds)} old</span>
               <span>by <span className="mono">{short(coin.creator)}</span></span>
             </div>
@@ -129,15 +135,15 @@ export default function CoinPage() {
               {mode === "lev"
                 ? LEVERAGE_ENABLED
                   ? <LeveragePanel coin={coin} lev={lev} onDone={refreshAll} />
-                  : <p className="note" style={{ fontSize: 13 }}><b style={{ color: "var(--text)" }}>Long / short is coming soon.</b> You&apos;ll be able to long or short any coin with SOL, and wins are paid from a locked on-chain vault without ever moving the chart.</p>
+                  : <p className="note" style={{ fontSize: 13 }}><b style={{ color: "var(--text)" }}>Long / short isn&apos;t switched on for this site yet.</b> See the <a href="/docs#ls">docs</a> for how it works.</p>
                 : <SpotPanel coin={coin} side={mode} onDone={refreshAll} />}
             </section>
 
-            {coin.leverage && (
+            {LEVERAGE_ENABLED && <VaultCard coin={coin} lev={lev} />}
+            {coin.description && (
               <section className="panel pad" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <h2>Long/short vault</h2>
-                <div className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{lev.vaultTotal.toFixed(2)} SOL</div>
-                <p className="note">Locked on-chain. Only winning long/short positions can be paid from it. Filled by 1.9% of every trade.</p>
+                <h2>About</h2>
+                <p className="note" style={{ fontSize: 13, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{coin.description}</p>
               </section>
             )}
           </aside>
