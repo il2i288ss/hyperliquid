@@ -1,0 +1,46 @@
+name: Devnet bot-run long/short test
+
+# Runs the bot-run long/short engine against the stable devnet platform's
+# demo coin with real transactions. Results -> devnet-ls-test branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/src/ls/**", "scripts/src/devnet-ls-test.ts"]
+
+permissions:
+  contents: write
+
+concurrency: devnet
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: scripts } }
+    env:
+      RPC_URL: ${{ vars.DEVNET_RPC_URL || 'https://api.devnet.solana.com' }}
+      ADMIN_KEYPAIR: ${{ github.workspace }}/devnet.json
+      SOL_USD: "3500"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - name: Wallet + demo coin
+        env:
+          DEVNET_KEYPAIR: ${{ secrets.DEVNET_KEYPAIR }}
+        run: |
+          printf '%s' "$DEVNET_KEYPAIR" > "$ADMIN_KEYPAIR"; chmod 600 "$ADMIN_KEYPAIR"
+          git clone -q --depth 1 -b devnet-state "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/state
+          node -e 'const s=require("/tmp/state/platform.json"); const c=s.coins.at(-1); console.log(`PLATFORM_CONFIG=${s.config}\nDEMO_MINT=${c.mint}`)' >> "$GITHUB_ENV"
+          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.1
+      - name: Test
+        run: npx tsx src/devnet-ls-test.ts 2>&1 | tee /tmp/ls-test.txt
+      - name: Publish
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cp /tmp/ls-test.txt ls-test-result.json /tmp/out/ 2>/dev/null || true
+          cd /tmp/out && git init -q -b devnet-ls-test
+          git config user.name ci && git config user.email ci@users.noreply.github.com
+          git add -A && git commit -q -m "ls test ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" HEAD:devnet-ls-test

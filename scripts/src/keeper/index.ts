@@ -7,6 +7,9 @@
  *   liquidate  every 10 s  close positions that lost 90% of their margin, and
  *                          positions whose stop loss / take profit was hit
  *   solprice   every  5 m  keep the on-chain SOL/USD (used for tiers) current
+ *
+ *   LS=on: the bot-run long/short engine + its HTTP API (src/ls), which
+ *   needs no on-chain program. Vault = VAULT_KEYPAIR.
  *   snapshot   every  3 m  holder balances (random offset)       [REWARDS=on]
  *   payout     every 15 m  claim fees -> split -> pay holders     [REWARDS=on]
  *
@@ -25,6 +28,7 @@ import { splitFees } from "../split-fees.js";
 import { snapshotAll } from "../rewards/snapshot.js";
 import { payHolders } from "../rewards/airdrop.js";
 import { solUsdNow } from "../sol-price.js";
+import { startLongShort } from "../ls/run.js";
 
 const keeper = loadKeypair("KEEPER_KEYPAIR");
 // Long/short jobs run only when a program id is set (off on mainnet until audited).
@@ -197,7 +201,14 @@ async function payoutJob() {
   await payHolders(false);
 }
 
-log("keeper", `starting as ${keeper.publicKey.toBase58()} · long/short ${LEVERAGE ? "on" : "off"} · rewards ${REWARDS ? "on" : "off"}`);
+const LS = process.env.LS === "on";
+log("keeper", `starting as ${keeper.publicKey.toBase58()} · long/short ${LS ? "bot-run" : LEVERAGE ? "on-chain" : "off"} · rewards ${REWARDS ? "on" : "off"}`);
+if (LS) {
+  await startLongShort({ every, log }).catch((e) => {
+    console.error("long/short engine failed to start:", e);
+    void alert("ls", e);
+  });
+}
 if (LEVERAGE) {
   every("prices", 8_000, pricesJob);
   every("markets", 60_000, marketsJob);
