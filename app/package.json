@@ -18,7 +18,9 @@
     "bn.js": "^5.2.1",
     "next": "^15.1.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",

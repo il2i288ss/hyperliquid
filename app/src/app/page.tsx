@@ -1,130 +1,89 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { buildLaunchTx, LAUNCH_FEE_SOL } from "@/lib/meteora";
+import Link from "next/link";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { CoinAvatar } from "@/components/CoinAvatar";
+import { age, price, usd } from "@/lib/format";
+import { tierFor } from "@/lib/tiers";
+import { useCoins } from "@/lib/useCoins";
+import type { Coin } from "@/lib/coins";
 
-export default function LaunchPage() {
-  const { connection } = useConnection();
-  const { publicKey, signTransaction } = useWallet();
-  const { setVisible } = useWalletModal();
-  const router = useRouter();
+const GRADUATING_FROM = 0.5; // curve progress where a coin moves to "About to graduate"
 
-  const [form, setForm] = useState({ name: "", symbol: "", description: "", website: "", twitter: "", telegram: "" });
-  const [image, setImage] = useState<File | null>(null);
-  const [firstBuy, setFirstBuy] = useState("0");
-  const [status, setStatus] = useState<"" | "uploading" | "signing" | "sending">("");
-  const [error, setError] = useState("");
+function CoinRow({ c }: { c: Coin }) {
+  const tier = tierFor(c.mcapUsd);
+  return (
+    <Link href={`/coin/${c.mint}`} className="coin-row">
+      <CoinAvatar mint={c.mint} name={c.name} />
+      <div className="coin-main">
+        <div className="coin-title">
+          <b>{c.name}</b>
+          <span className="muted">${c.symbol}</span>
+          <span className="muted mono" style={{ fontSize: 12 }}>{age(c.ageSeconds)}</span>
+          {c.leverage && <span className="badge">L/S {tier.leverage}x</span>}
+        </div>
+        <div className="coin-stats">
+          <span>MC <b>{usd(c.mcapUsd)}</b></span>
+          <span>Price <b>{price(c.priceUsd)}</b></span>
+          <span>Pool <b>{c.quoteReserveSol.toFixed(2)} SOL</b></span>
+        </div>
+        {!c.graduated && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="bar" role="progressbar" aria-label="Bonding curve progress" aria-valuenow={Math.round(c.curveProgress * 100)} aria-valuemin={0} aria-valuemax={100}>
+              <div style={{ width: `${c.curveProgress * 100}%`, background: c.curveProgress > 0.8 ? "var(--warn)" : "var(--accent)" }} />
+            </div>
+            <span className="mono muted" style={{ fontSize: 11 }}>{Math.round(c.curveProgress * 100)}%</span>
+          </div>
+        )}
+      </div>
+      <span className="btn buy" aria-hidden="true">Trade</span>
+    </Link>
+  );
+}
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm({ ...form, [k]: e.target.value });
+function Column({ title, hint, coins }: { title: string; hint: string; coins: Coin[] }) {
+  return (
+    <section className="panel" style={{ minWidth: 0 }}>
+      <div className="panel-head"><h2>{title}</h2><span className="muted" style={{ fontSize: 12 }}>{hint}</span></div>
+      {coins.length ? coins.slice(0, 40).map((c) => <CoinRow key={c.mint} c={c} />) : <p className="empty">Nothing here yet.</p>}
+    </section>
+  );
+}
 
-  const buy = Math.max(0, Number(firstBuy) || 0);
-  const ready = form.name.trim() && form.symbol.trim() && image && !status;
-
-  async function launch() {
-    if (!publicKey || !signTransaction) return setVisible(true);
-    setError("");
-    try {
-      setStatus("uploading");
-      const body = new FormData();
-      Object.entries(form).forEach(([k, v]) => body.append(k, v));
-      body.append("image", image!);
-      const res = await fetch("/api/metadata", { method: "POST", body });
-      const meta = await res.json();
-      if (!res.ok) throw new Error(meta.error ?? "Upload failed");
-
-      setStatus("signing");
-      const { tx, mint } = await buildLaunchTx({
-        connection,
-        creator: publicKey,
-        name: form.name.trim(),
-        symbol: form.symbol.trim().toUpperCase(),
-        uri: meta.uri,
-        firstBuySol: buy,
-      });
-      const signed = await signTransaction(tx);
-
-      setStatus("sending");
-      const sig = await connection.sendRawTransaction(signed.serialize());
-      await connection.confirmTransaction(sig, "confirmed");
-      router.push(`/coin/${mint.toBase58()}`);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setStatus("");
-    }
-  }
-
-  const label = { "": "Launch coin", uploading: "Uploading image…", signing: "Approve in wallet…", sending: "Launching…" }[status];
+function Discover() {
+  const { coins, error } = useCoins();
+  const q = (useSearchParams().get("q") ?? "").toLowerCase();
+  const list = (coins ?? []).filter(
+    (c) => !q || c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q) || c.mint === q,
+  );
+  const fresh = list.filter((c) => !c.graduated && c.curveProgress < GRADUATING_FROM);
+  const graduating = list.filter((c) => !c.graduated && c.curveProgress >= GRADUATING_FROM).sort((a, b) => b.curveProgress - a.curveProgress);
+  const graduated = list.filter((c) => c.graduated).sort((a, b) => b.mcapUsd - a.mcapUsd);
 
   return (
     <main className="page">
-      <div className="grid">
-        <section className="panel">
-          <h2>Launch a coin</h2>
-          <div className="row">
-            <div>
-              <label className="label">Name</label>
-              <input className="input" maxLength={32} value={form.name} onChange={set("name")} placeholder="Moon Cat" />
-            </div>
-            <div>
-              <label className="label">Ticker</label>
-              <input className="input" maxLength={10} value={form.symbol} onChange={set("symbol")} placeholder="MCAT" />
-            </div>
-          </div>
-
-          <label className="label">Description</label>
-          <textarea className="textarea" maxLength={500} value={form.description} onChange={set("description")} />
-
-          <label className="label">Image (max 2 MB)</label>
-          <div className="row" style={{ alignItems: "center" }}>
-            {image ? <img className="preview" src={URL.createObjectURL(image)} alt="" style={{ flex: "0 0 72px" }} /> : null}
-            <input className="input" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
-          </div>
-
-          <div className="row">
-            <div>
-              <label className="label">Website</label>
-              <input className="input" value={form.website} onChange={set("website")} />
-            </div>
-            <div>
-              <label className="label">X / Twitter</label>
-              <input className="input" value={form.twitter} onChange={set("twitter")} />
-            </div>
-            <div>
-              <label className="label">Telegram</label>
-              <input className="input" value={form.telegram} onChange={set("telegram")} />
-            </div>
-          </div>
-        </section>
-
-        <aside className="panel">
-          <h2>Launch</h2>
-          <label className="label">Your first buy (SOL, optional)</label>
-          <input className="input mono" inputMode="decimal" value={firstBuy} onChange={(e) => setFirstBuy(e.target.value)} />
-          <p className="note">Your first buy happens in the launch transaction, so snipers can&apos;t get in ahead of you.</p>
-
-          <div style={{ margin: "14px 0" }}>
-            <div className="kv"><span>Launch fee</span><b className="mono">{LAUNCH_FEE_SOL} SOL</b></div>
-            <div className="kv"><span>First buy</span><b className="mono">{buy} SOL</b></div>
-            <div className="kv"><span>Network + rent (approx.)</span><b className="mono">~0.025 SOL</b></div>
-            <div className="kv"><span>Total</span><b className="mono">~{(LAUNCH_FEE_SOL + buy + 0.025).toFixed(3)} SOL</b></div>
-          </div>
-
-          <button className="btn" disabled={!!publicKey && !ready} onClick={launch}>
-            {publicKey ? label : "Connect wallet"}
-          </button>
-          {error && <p className="err">{error}</p>}
-
-          <p className="note">
-            Every trade pays a 3% tax: 1% to holders in SOL, 1.9% to the long/short vault, 0.1% to the platform.
-            Buys in the launch block pay a <span className="warn">90% anti-sniper tax</span>.
-          </p>
-        </aside>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div className="muted" style={{ fontSize: 12 }}>
+          {coins ? `${coins.length} coins launched` : "Loading coins…"}
+          {q && <> · results for “{q}” · <Link href="/">clear</Link></>}
+        </div>
+        <Link href="/launch" className="btn warn">Launch a coin</Link>
+      </div>
+      {error && <p className="msg-err">{error}</p>}
+      <div className="columns">
+        <Column title="New launches" hint="Snipers pay 90% in the launch block" coins={fresh} />
+        <Column title="About to graduate" hint="Bonding curve progress" coins={graduating} />
+        <Column title="Graduated" hint="Trading on Meteora" coins={graduated} />
       </div>
     </main>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <Discover />
+    </Suspense>
   );
 }

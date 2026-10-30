@@ -1,110 +1,129 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { PublicKey } from "@solana/web3.js";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import BN from "bn.js";
-import { buildSwapTx } from "@/lib/meteora";
-import { TIERS } from "@/lib/tiers";
+import { CoinAvatar } from "@/components/CoinAvatar";
+import { SpotPanel } from "@/components/SpotPanel";
+import { LeveragePanel } from "@/components/LeveragePanel";
+import { PositionsTable } from "@/components/PositionsTable";
+import { useLeverage } from "@/lib/useLeverage";
+import { explorer } from "@/lib/config";
+import { age, price, short, usd } from "@/lib/format";
+import { tierFor } from "@/lib/tiers";
+import type { Coin } from "@/lib/coins";
 
-type Mode = "buy" | "sell" | "leverage";
+type Mode = "buy" | "sell" | "lev";
 
 export default function CoinPage() {
   const { mint } = useParams<{ mint: string }>();
-  const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
-  const { setVisible } = useWalletModal();
-
+  const [coin, setCoin] = useState<Coin | null>(null);
+  const [error, setError] = useState("");
   const [mode, setMode] = useState<Mode>("buy");
-  const [amount, setAmount] = useState("");
-  const [slippage, setSlippage] = useState("5");
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ ok?: string; err?: string }>({});
+  const [tab, setTab] = useState<"positions" | "trades" | "holders">("positions");
+  const lev = useLeverage(mint);
 
-  let mintKey: PublicKey | null = null;
-  try { mintKey = new PublicKey(mint); } catch { /* invalid */ }
-  if (!mintKey) return <main className="page"><p className="err">Invalid coin address.</p></main>;
-
-  async function trade() {
-    if (!publicKey) return setVisible(true);
-    setBusy(true);
-    setMsg({});
+  const load = useCallback(async () => {
     try {
-      const n = Number(amount);
-      if (!(n > 0)) throw new Error("Enter an amount");
-      // buy: amount in SOL (9 decimals); sell: amount in tokens (6 decimals)
-      const amountIn = new BN(Math.round(n * (mode === "buy" ? 1e9 : 1e6)));
-      const { tx } = await buildSwapTx({
-        connection,
-        owner: publicKey,
-        mint: mintKey!,
-        buy: mode === "buy",
-        amountIn,
-        slippageBps: Math.round(Number(slippage) * 100),
-      });
-      const sig = await sendTransaction(tx, connection);
-      await connection.confirmTransaction(sig, "confirmed");
-      setMsg({ ok: `Done: ${sig}` });
+      const res = await fetch(`/api/coins/${mint}`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Could not load this coin");
+      setCoin(body.coin);
+      setError("");
     } catch (e) {
-      setMsg({ err: (e as Error).message });
-    } finally {
-      setBusy(false);
+      setError((e as Error).message);
     }
-  }
+  }, [mint]);
+
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 10_000);
+    return () => clearInterval(t);
+  }, [load]);
+
+  const refreshAll = () => {
+    load();
+    lev.refresh().catch(() => {});
+  };
+
+  if (error && !coin) return <main className="page"><p className="msg-err" role="alert">{error}</p></main>;
+  if (!coin) return <main className="page"><p className="muted">Loading…</p></main>;
+
+  const tier = tierFor(coin.mcapUsd);
+  const solUsd = lev.global?.solUsd || coin.priceUsd / coin.priceSol || 0;
 
   return (
-    <main className="page">
-      <div className="grid">
-        <section>
-          <div className="panel" style={{ marginBottom: 16 }}>
-            <h2 className="mono">{mintKey.toBase58()}</h2>
-            <p className="note">Live price, market cap and holders come from the indexer (see README, phase 2).</p>
+    <>
+      <section className="strip">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <CoinAvatar mint={coin.mint} name={coin.name} large />
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{coin.name}</h1>
+              <span className="muted">${coin.symbol}</span>
+              {coin.leverage && <span className="badge">Long/Short · up to {tier.leverage}x</span>}
+              {coin.graduated && <span className="badge grad">Graduated</span>}
+            </div>
+            <div className="muted" style={{ fontSize: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <a href={explorer("address", coin.mint)} target="_blank" rel="noreferrer" className="mono">{short(coin.mint)}</a>
+              <span>{age(coin.ageSeconds)} old</span>
+              <span>by <span className="mono">{short(coin.creator)}</span></span>
+            </div>
           </div>
-          <div className="panel chart">Chart (TradingView lightweight-charts, fed by the indexer)</div>
-        </section>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 28px", flex: "1 1 520px" }}>
+          <div className="stat"><span>Price</span><span>{price(coin.priceUsd)}</span></div>
+          <div className="stat"><span>Market cap</span><span>{usd(coin.mcapUsd)}</span></div>
+          <div className="stat"><span>Pool liquidity</span><span>{coin.quoteReserveSol.toFixed(2)} SOL</span></div>
+          {!coin.graduated && <div className="stat"><span>Bonding curve</span><span>{Math.round(coin.curveProgress * 100)}%</span></div>}
+          {coin.leverage && <div className="stat"><span>Long / short open</span><span>{(lev.market?.oiLong ?? 0).toFixed(2)} / {(lev.market?.oiShort ?? 0).toFixed(2)} SOL</span></div>}
+        </div>
+      </section>
 
-        <aside className="panel">
-          <div className="tabs">
-            {(["buy", "sell", "leverage"] as Mode[]).map((m) => (
-              <button key={m} className={`tab ${mode === m ? "on" : ""}`} onClick={() => setMode(m)}>
-                {m === "leverage" ? "Long / Short" : m[0].toUpperCase() + m.slice(1)}
-              </button>
-            ))}
-          </div>
+      <main className="page">
+        <div className="split">
+          <div className="main">
+            <section className="panel" aria-label="Price chart">
+              <div className="empty" style={{ minHeight: 340, display: "grid", placeItems: "center" }}>
+                Live chart and trade history arrive with the indexer (next step).
+              </div>
+            </section>
 
-          {mode !== "leverage" ? (
-            <>
-              <label className="label">{mode === "buy" ? "Pay (SOL)" : "Sell (tokens)"}</label>
-              <input className="input mono" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.0" />
-              <label className="label">Max slippage %</label>
-              <input className="input mono" inputMode="decimal" value={slippage} onChange={(e) => setSlippage(e.target.value)} />
-              <p className="note">
-                3% tax on every trade. Your slippage limit also blocks the 90% launch-block tax, so you can never pay it by accident.
-              </p>
-              <button className={`btn ${mode === "buy" ? "long" : "short"}`} disabled={busy} onClick={trade} style={{ marginTop: 12 }}>
-                {!publicKey ? "Connect wallet" : busy ? "Confirm in wallet…" : mode === "buy" ? "Buy" : "Sell"}
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="note">Long or short this coin with SOL. Wins are paid in SOL from the vault and never move the chart.</p>
-              <div style={{ marginTop: 10 }}>
-                {TIERS.map((t) => (
-                  <div className="kv" key={t.id}>
-                    <span>{t.label}</span>
-                    <b className="mono">{t.leverage}x · max {t.maxMarginSol} SOL</b>
-                  </div>
+            <section className="panel">
+              <div className="subtabs" role="tablist" aria-label="Activity">
+                {([["positions", `Your positions (${lev.positions.length})`], ["trades", "Trades"], ["holders", "Holders"]] as const).map(([k, label]) => (
+                  <button key={k} type="button" role="tab" aria-selected={tab === k} className={`subtab${tab === k ? " on" : ""}`} onClick={() => setTab(k)}>{label}</button>
                 ))}
               </div>
-              <button className="btn" disabled style={{ marginTop: 12 }}>Coming in phase 2</button>
-            </>
-          )}
-          {msg.ok && <p className="ok">{msg.ok}</p>}
-          {msg.err && <p className="err">{msg.err}</p>}
-        </aside>
-      </div>
-    </main>
+              {tab === "positions" ? (
+                <PositionsTable coin={coin} positions={lev.positions} solUsd={solUsd} testBuild={lev.global?.testBuild ?? false} onDone={refreshAll} />
+              ) : (
+                <p className="empty">{tab === "trades" ? "Live trades" : "Top holders"} arrive with the indexer (next step).</p>
+              )}
+            </section>
+          </div>
+
+          <aside className="side">
+            <section className="panel pad" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="tabs" role="tablist" aria-label="Order type">
+                {([["buy", "Buy"], ["sell", "Sell"], ["lev", "Long / Short"]] as const).map(([k, label]) => (
+                  <button key={k} type="button" role="tab" aria-selected={mode === k} className={`tab${mode === k ? " on" : ""}`} onClick={() => setMode(k)}>{label}</button>
+                ))}
+              </div>
+              {mode === "lev"
+                ? <LeveragePanel coin={coin} lev={lev} onDone={refreshAll} />
+                : <SpotPanel coin={coin} side={mode} onDone={refreshAll} />}
+            </section>
+
+            {coin.leverage && (
+              <section className="panel pad" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <h2>Long/short vault</h2>
+                <div className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{lev.vaultTotal.toFixed(2)} SOL</div>
+                <p className="note">Locked on-chain. Only winning long/short positions can be paid from it. Filled by 1.9% of every trade.</p>
+              </section>
+            )}
+          </aside>
+        </div>
+      </main>
+    </>
   );
 }

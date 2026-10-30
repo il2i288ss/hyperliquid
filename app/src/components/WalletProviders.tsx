@@ -7,6 +7,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { WalletConnectWalletAdapter } from "@solana/wallet-adapter-walletconnect";
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { BRAND, NETWORK, RPC_URL } from "@/lib/config";
 
 /**
  * Phantom + Solflare adapters, WalletConnect for mobile wallets, and every
@@ -14,11 +15,8 @@ import "@solana/wallet-adapter-react-ui/styles.css";
  * detected automatically.
  */
 export function WalletProviders({ children }: { children: ReactNode }) {
-  const endpoint = process.env.NEXT_PUBLIC_RPC_URL!;
-  const network =
-    process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta"
-      ? WalletAdapterNetwork.Mainnet
-      : WalletAdapterNetwork.Devnet;
+  const endpoint = RPC_URL;
+  const network = NETWORK === "mainnet-beta" ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet;
 
   const wallets = useMemo(() => {
     const list: any[] = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
@@ -30,7 +28,7 @@ export function WalletProviders({ children }: { children: ReactNode }) {
           options: {
             projectId,
             metadata: {
-              name: "Launchpad",
+              name: BRAND,
               description: "Launch, trade, long and short memecoins",
               url: typeof window !== "undefined" ? window.location.origin : "",
               icons: [],

@@ -6,8 +6,7 @@ import {
 } from "@meteora-ag/dynamic-bonding-curve-sdk";
 import BN from "bn.js";
 
-export const CONFIG = new PublicKey(process.env.NEXT_PUBLIC_DBC_CONFIG!);
-export const LAUNCH_FEE_SOL = 0.03;
+import { DBC_CONFIG as CONFIG } from "./config";
 
 export function client(connection: Connection) {
   return DynamicBondingCurveClient.create(connection, "confirmed");
