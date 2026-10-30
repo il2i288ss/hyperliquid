@@ -24,7 +24,9 @@ import { snapshotAll } from "../rewards/snapshot.js";
 import { payHolders } from "../rewards/airdrop.js";
 
 const keeper = loadKeypair("KEEPER_KEYPAIR");
-const lev = new LeverageClient(new PublicKey(process.env.LEVERAGE_PROGRAM_ID!));
+// Long/short jobs run only when a program id is set (off on mainnet until audited).
+const LEVERAGE = Boolean(process.env.LEVERAGE_PROGRAM_ID);
+const lev = new LeverageClient(new PublicKey(process.env.LEVERAGE_PROGRAM_ID || "11111111111111111111111111111111"));
 const config = new PublicKey(process.env.PLATFORM_CONFIG!);
 const REWARDS = process.env.REWARDS === "on";
 const DISC = {
@@ -154,10 +156,12 @@ async function payoutJob() {
   await payHolders(false);
 }
 
-log("keeper", `starting as ${keeper.publicKey.toBase58()} · rewards ${REWARDS ? "on" : "off"}`);
-every("prices", 8_000, pricesJob);
-every("markets", 60_000, marketsJob);
-every("liquidate", 10_000, liquidateJob);
+log("keeper", `starting as ${keeper.publicKey.toBase58()} · long/short ${LEVERAGE ? "on" : "off"} · rewards ${REWARDS ? "on" : "off"}`);
+if (LEVERAGE) {
+  every("prices", 8_000, pricesJob);
+  every("markets", 60_000, marketsJob);
+  every("liquidate", 10_000, liquidateJob);
+}
 if (REWARDS) {
   every("snapshot", 150_000, snapshotAll, 60_000);
   every("payout", 15 * 60_000, payoutJob);

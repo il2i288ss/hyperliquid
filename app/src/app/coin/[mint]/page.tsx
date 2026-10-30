@@ -7,7 +7,7 @@ import { SpotPanel } from "@/components/SpotPanel";
 import { LeveragePanel } from "@/components/LeveragePanel";
 import { PositionsTable } from "@/components/PositionsTable";
 import { useLeverage } from "@/lib/useLeverage";
-import { explorer } from "@/lib/config";
+import { LEVERAGE_ENABLED, explorer } from "@/lib/config";
 import { age, price, short, usd } from "@/lib/format";
 import { tierFor } from "@/lib/tiers";
 import type { Coin } from "@/lib/coins";
@@ -19,7 +19,7 @@ export default function CoinPage() {
   const [coin, setCoin] = useState<Coin | null>(null);
   const [error, setError] = useState("");
   const [mode, setMode] = useState<Mode>("buy");
-  const [tab, setTab] = useState<"positions" | "trades" | "holders">("positions");
+  const [tab, setTab] = useState<"positions" | "trades" | "holders">(LEVERAGE_ENABLED ? "positions" : "trades");
   const lev = useLeverage(mint);
 
   const load = useCallback(async () => {
@@ -90,7 +90,7 @@ export default function CoinPage() {
 
             <section className="panel">
               <div className="subtabs" role="tablist" aria-label="Activity">
-                {([["positions", `Your positions (${lev.positions.length})`], ["trades", "Trades"], ["holders", "Holders"]] as const).map(([k, label]) => (
+                {([["positions", `Your positions (${lev.positions.length})`], ["trades", "Trades"], ["holders", "Holders"]] as const).filter(([k]) => LEVERAGE_ENABLED || k !== "positions").map(([k, label]) => (
                   <button key={k} type="button" role="tab" aria-selected={tab === k} className={`subtab${tab === k ? " on" : ""}`} onClick={() => setTab(k)}>{label}</button>
                 ))}
               </div>
@@ -110,7 +110,9 @@ export default function CoinPage() {
                 ))}
               </div>
               {mode === "lev"
-                ? <LeveragePanel coin={coin} lev={lev} onDone={refreshAll} />
+                ? LEVERAGE_ENABLED
+                  ? <LeveragePanel coin={coin} lev={lev} onDone={refreshAll} />
+                  : <p className="note" style={{ fontSize: 13 }}><b style={{ color: "var(--text)" }}>Long / short is coming soon.</b> You&apos;ll be able to long or short any coin with SOL, and wins are paid from a locked on-chain vault without ever moving the chart.</p>
                 : <SpotPanel coin={coin} side={mode} onDone={refreshAll} />}
             </section>
 

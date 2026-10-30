@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { LEVERAGE_ENABLED } from "./config";
 import {
   decodeGlobal,
   decodeMarket,
@@ -60,6 +61,7 @@ export function useLeverage(mint: string) {
   }, [connection, publicKey, mint]);
 
   useEffect(() => {
+    if (!LEVERAGE_ENABLED) return;
     refresh().catch(() => {});
     const t = setInterval(() => refresh().catch(() => {}), 8_000);
     return () => clearInterval(t);

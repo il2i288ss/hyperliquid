@@ -7,7 +7,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { DynamicBondingCurveClient } from "@meteora-ag/dynamic-bonding-curve-sdk";
 import bs58 from "bs58";
-import { DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_PROGRAM, RPC_URL, TOTAL_SUPPLY } from "./config";
+import { DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_ENABLED, LEVERAGE_PROGRAM, RPC_URL, TOTAL_SUPPLY } from "./config";
 import { decodeGlobal, decodeMarket, globalPda } from "./leverage";
 
 const MARKET_DISC = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154]);
@@ -58,6 +58,7 @@ function priceFromSqrt(sqrt: { toString(): string }) {
 }
 
 export async function solUsd(connection: Connection) {
+  if (!LEVERAGE_ENABLED) return FALLBACK_SOL_USD;
   const info = await connection.getAccountInfo(globalPda());
   const g = info ? decodeGlobal(info.data as Buffer) : null;
   return g && g.solUsd > 0 ? g.solUsd : FALLBACK_SOL_USD;
@@ -74,9 +75,11 @@ export async function listCoins(): Promise<Coin[]> {
     dbc.state.getPoolConfig(DBC_CONFIG),
     connection.getSlot(),
     solUsd(connection),
-    connection
-      .getProgramAccounts(LEVERAGE_PROGRAM, { filters: [{ memcmp: { offset: 0, bytes: bs58.encode(MARKET_DISC) } }] })
-      .catch(() => []),
+    LEVERAGE_ENABLED
+      ? connection
+          .getProgramAccounts(LEVERAGE_PROGRAM, { filters: [{ memcmp: { offset: 0, bytes: bs58.encode(MARKET_DISC) } }] })
+          .catch(() => [])
+      : Promise.resolve([]),
   ]);
   const enabled = new Set(
     markets.map((m) => decodeMarket(m.account.data as Buffer)).filter((m) => m.enabled).map((m) => m.mint.toBase58()),
