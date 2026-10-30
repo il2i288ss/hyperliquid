@@ -269,3 +269,6 @@ table.data td { padding: 10px 14px; border-top: 1px solid var(--line-soft); font
 .topbar { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .cta { background: var(--text); color: var(--accent-ink); border-radius: 10px; }
 .cta:hover:not(:disabled) { background: #ffffff; }
+.soon { display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
+.soon b { font-size: 15px; }
+.soon-tag { align-self: flex-start; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text); border: 1px solid var(--line-strong); background: var(--panel-2); border-radius: 999px; padding: 3px 10px; }

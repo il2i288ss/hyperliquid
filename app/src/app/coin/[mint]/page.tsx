@@ -135,7 +135,12 @@ export default function CoinPage() {
               {mode === "lev"
                 ? LEVERAGE_ENABLED
                   ? <LeveragePanel coin={coin} lev={lev} onDone={refreshAll} />
-                  : <p className="note" style={{ fontSize: 13 }}><b style={{ color: "var(--text)" }}>Long / short isn&apos;t switched on for this site yet.</b> See the <a href="/docs#ls">docs</a> for how it works.</p>
+                  : <div className="soon">
+                      <span className="soon-tag">Coming soon</span>
+                      <b>Long or short any coin with SOL</b>
+                      <p className="note" style={{ fontSize: 13 }}>Up to 10x, with take profit and stop loss by market cap. Wins are paid in SOL from an on-chain vault, so positions never move the chart.</p>
+                      <a href="/docs#ls" className="note" style={{ fontSize: 12 }}>How it works →</a>
+                    </div>
                 : <SpotPanel coin={coin} side={mode} onDone={refreshAll} />}
             </section>
 
