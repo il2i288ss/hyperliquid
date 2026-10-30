@@ -29,6 +29,8 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const series = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const line = useRef<ISeriesApi<"Area"> | null>(null);
+  const [style, setStyle] = useState<"line" | "candles">("line");
   const fitted = useRef("");
   const [frame, setFrame] = useState(60);
   const [mode, setMode] = useState<Mode>("mcap");
@@ -80,6 +82,15 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
       upColor: "#2ebd85", downColor: "#f6465d", wickUpColor: "#2ebd85", wickDownColor: "#f6465d",
       borderVisible: false,
       priceLineColor: "#525252",
+      visible: false,
+    });
+    line.current = c.addAreaSeries({
+      lineWidth: 2,
+      lineColor: "#2ebd85",
+      topColor: "rgba(46, 189, 133, 0.28)",
+      bottomColor: "rgba(46, 189, 133, 0)",
+      priceLineColor: "#525252",
+      crosshairMarkerRadius: 4,
     });
     chart.current = c;
     return () => c.remove();
@@ -88,11 +99,23 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
   // Axis labels: $2.85K style for market cap, significant digits for price.
   useEffect(() => {
     chart.current?.applyOptions({ localization: { priceFormatter: mode === "mcap" ? usd : fmtPrice } });
-    series.current?.applyOptions({ priceFormat: { type: "custom", minMove: 1e-12, formatter: mode === "mcap" ? usd : fmtPrice } });
+    const priceFormat = { type: "custom" as const, minMove: 1e-12, formatter: mode === "mcap" ? usd : fmtPrice };
+    series.current?.applyOptions({ priceFormat });
+    line.current?.applyOptions({ priceFormat });
   }, [mode]);
+
+  // Graph (default) or candles; the graph is green when up since launch, red when down.
+  useEffect(() => {
+    series.current?.applyOptions({ visible: style === "candles" });
+    line.current?.applyOptions({ visible: style === "line" });
+  }, [style]);
 
   useEffect(() => {
     series.current?.setData(candles);
+    line.current?.setData(candles.map((c) => ({ time: c.time, value: c.close })));
+    const up = candles.length < 2 || candles[candles.length - 1].close >= candles[0].open;
+    const [r, g, b] = up ? [46, 189, 133] : [246, 70, 93];
+    line.current?.applyOptions({ lineColor: `rgb(${r}, ${g}, ${b})`, topColor: `rgba(${r}, ${g}, ${b}, 0.28)`, bottomColor: `rgba(${r}, ${g}, ${b}, 0)` });
     // Fit once per coin/timeframe/mode; afterwards keep the user's zoom.
     const key = `${frame}:${mode}`;
     if (candles.length && fitted.current !== key) {
@@ -109,9 +132,15 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
             <button key={f.s} type="button" className={frame === f.s ? "on" : ""} aria-pressed={frame === f.s} onClick={() => setFrame(f.s)}>{f.label}</button>
           ))}
         </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="seg" role="group" aria-label="Chart style">
+          <button type="button" className={style === "line" ? "on" : ""} aria-pressed={style === "line"} onClick={() => setStyle("line")}>Graph</button>
+          <button type="button" className={style === "candles" ? "on" : ""} aria-pressed={style === "candles"} onClick={() => setStyle("candles")}>Candles</button>
+        </div>
         <div className="seg" role="group" aria-label="Chart value">
           <button type="button" className={mode === "mcap" ? "on" : ""} aria-pressed={mode === "mcap"} onClick={() => setMode("mcap")}>Market cap</button>
           <button type="button" className={mode === "price" ? "on" : ""} aria-pressed={mode === "price"} onClick={() => setMode("price")}>Price</button>
+        </div>
         </div>
       </div>
       <div style={{ position: "relative", height: 400 }}>
