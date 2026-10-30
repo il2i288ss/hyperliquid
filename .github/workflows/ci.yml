@@ -24,7 +24,7 @@ jobs:
     env:
       NEXT_PUBLIC_RPC_URL: https://api.devnet.solana.com
       NEXT_PUBLIC_NETWORK: devnet
-      NEXT_PUBLIC_DBC_CONFIG: So11111111111111111111111111111111111111112
+      NEXT_PUBLIC_DBC_CONFIG: 2vXECqjW5vLPD4cvunQujy3jU5YfxrTEBmfJUNjFjYY9
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

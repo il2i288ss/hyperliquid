@@ -6,7 +6,7 @@
  *
  *   npx tsx src/devnet-platform.ts <stateDir> [demoBuySol]
  */
-import { Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, type Transaction } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { deriveDbcPoolAddress } from "@meteora-ag/dynamic-bonding-curve-sdk";
 import BN from "bn.js";
@@ -14,6 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { connection, dbc, loadKeypair } from "./env.js";
 import { curveConfig } from "./create-partner-config.js";
+import { LeverageClient } from "./leverage/client.js";
 
 const dir = process.argv[2] ?? ".";
 const buySol = Number(process.argv[3] ?? "0.3");
@@ -42,6 +43,21 @@ async function main() {
     );
     state.config = config.publicKey.toBase58();
     console.log(`created platform config ${state.config}`);
+  }
+
+  // Long/short program: initialize once and keep some SOL in the vault so
+  // positions have capacity (the 1.9% fee share fills it on mainnet).
+  if (process.env.LEVERAGE_PROGRAM_ID) {
+    const lev = new LeverageClient(new PublicKey(process.env.LEVERAGE_PROGRAM_ID));
+    if (!(await connection.getAccountInfo(lev.global))) {
+      await send(new Transaction().add(lev.initialize(admin.publicKey, 150_000_000n)));
+      console.log(`initialized long/short program ${lev.programId.toBase58()}`);
+    }
+    if ((await connection.getBalance(lev.vault)) < 0.5 * LAMPORTS_PER_SOL) {
+      await send(new Transaction().add(SystemProgram.transfer({ fromPubkey: admin.publicKey, toPubkey: lev.vault, lamports: LAMPORTS_PER_SOL })));
+      console.log("funded vault with 1 SOL");
+    }
+    state.leverageProgram = lev.programId.toBase58();
   }
 
   if (buySol > 0) {
