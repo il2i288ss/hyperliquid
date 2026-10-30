@@ -6,8 +6,8 @@ import { Icon } from "./Icon";
 
 const BRAND_ICONS = {
   x: <path fill="currentColor" stroke="none" d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.17h1.7L7.4 4.74H5.58z" />,
-  telegram: <path d="m21.5 4.5-3.2 15.1c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.2L5.9 13.3l-4.8-1.5c-1-.3-1-1 .2-1.5l18.8-7.3c.9-.3 1.6.2 1.4 1.5z" />,
-  youtube: <><rect x="2.5" y="5" width="19" height="14" rx="4" /><path d="m10 9 5 3-5 3z" /></>,
+  telegram: <><circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" /><path d="M6.3 11.7 16.6 7.7c.5-.2.9.1.8.8l-1.8 8.3c-.1.6-.5.7-1 .5l-2.7-2-1.3 1.3c-.1.1-.3.3-.6.3l.2-2.8 5-4.6c.2-.2 0-.3-.3-.1L8.7 13l-2.7-.8c-.6-.2-.6-.6.3-.5z" fill="var(--panel)" stroke="none" /></>,
+  youtube: <><rect x="1.5" y="5" width="21" height="14" rx="4.5" fill="currentColor" stroke="none" /><path d="M10 9.2v5.6l4.9-2.8z" fill="var(--panel)" stroke="none" /></>,
 };
 
 function Glyph({ name, size = 15 }: { name: keyof typeof BRAND_ICONS; size?: number }) {

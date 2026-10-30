@@ -35,6 +35,19 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
   const fitted = useRef("");
   const [frame, setFrame] = useState(60);
   const [mode, setMode] = useState<Mode>("mcap");
+  const [tfOpen, setTfOpen] = useState(false);
+  const tfBox = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!tfOpen) return;
+    const close = (e: MouseEvent) => !tfBox.current?.contains(e.target as Node) && setTfOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setTfOpen(false);
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [tfOpen]);
 
   const scale = mode === "mcap" ? TOTAL_SUPPLY * solUsd : solUsd;
 
@@ -126,10 +139,18 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
   return (
     <section className="panel" aria-label="Chart">
       <div className="chart-bar">
-        <div className="seg" role="group" aria-label="Timeframe">
-          {FRAMES.map((f) => (
-            <button key={f.s} type="button" className={frame === f.s ? "on" : ""} aria-pressed={frame === f.s} onClick={() => setFrame(f.s)}>{f.label}</button>
-          ))}
+        <div className="tf" ref={tfBox}>
+          <button type="button" className="tf-btn" aria-haspopup="listbox" aria-expanded={tfOpen} onClick={() => setTfOpen((o) => !o)}>
+            {FRAMES.find((f) => f.s === frame)?.label}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: tfOpen ? "rotate(180deg)" : undefined, transition: "transform .15s" }}><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          {tfOpen && (
+            <div className="tf-menu" role="listbox" aria-label="Timeframe">
+              {FRAMES.map((f) => (
+                <button key={f.s} type="button" role="option" aria-selected={frame === f.s} className={frame === f.s ? "on" : ""} onClick={() => { setFrame(f.s); setTfOpen(false); }}>{f.label}</button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="seg" role="group" aria-label="Chart value">
           <button type="button" className={mode === "mcap" ? "on" : ""} aria-pressed={mode === "mcap"} onClick={() => setMode("mcap")}>Market cap</button>

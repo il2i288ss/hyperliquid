@@ -286,3 +286,12 @@ table.data td { padding: 10px 14px; border-top: 1px solid var(--line-soft); font
 .hero-ghost:hover { background: rgba(255,255,255,.12); color: #fff; text-decoration: none; }
 @media (max-width: 640px) { .hero { min-height: 240px; } .hero-content { padding: 36px 16px; } }
 @media (prefers-reduced-motion: reduce) { .hero-video { animation: none; } }
+
+/* timeframe dropdown */
+.tf { position: relative; }
+.tf-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--well); color: var(--text); font: 600 12px var(--sans); cursor: pointer; }
+.tf-btn:hover { border-color: var(--line-strong); }
+.tf-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; display: flex; flex-direction: column; min-width: 96px; padding: 4px; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.6); animation: pop .12s ease-out; }
+.tf-menu button { all: unset; cursor: pointer; padding: 8px 12px; border-radius: 7px; font: 600 12px var(--sans); color: var(--text-2); }
+.tf-menu button:hover, .tf-menu button:focus-visible { background: var(--panel-2); color: var(--text); }
+.tf-menu button.on { background: var(--panel-2); color: var(--text); }
