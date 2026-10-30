@@ -35,7 +35,9 @@ jobs:
           node -e 'const s=require("/tmp/state/platform.json"); const c=s.coins.at(-1); console.log(`PLATFORM_CONFIG=${s.config}\nDEMO_MINT=${c.mint}`)' >> "$GITHUB_ENV"
           npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.1
       - name: Test
-        run: npx tsx src/devnet-ls-test.ts 2>&1 | tee /tmp/ls-test.txt
+        run: |
+          set -o pipefail
+          npx tsx src/devnet-ls-test.ts 2>&1 | tee /tmp/ls-test.txt
       - name: Publish
         if: always()
         run: |

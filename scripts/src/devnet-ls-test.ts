@@ -111,7 +111,7 @@ async function main() {
   } catch (err) {
     check("close before hold time rejected", /Hold/.test((err as Error).message), (err as Error).message);
   }
-  await sleep(6_000);
+  await sleep(22_000); // test hold time is 20 s
   const stranger = Keypair.generate();
   try {
     const m = msg(pos1!.id);
@@ -141,7 +141,7 @@ async function main() {
   check("open short with TP and long with SL", r5.ok === true && r6.ok === true);
   await e.risk();
   check("TP/SL wait for hold time", (await e.view(mint)).positions.length === 2);
-  await sleep(6_000);
+  await sleep(22_000);
   await e.recordPrices();
   await e.risk();
   const left = (await e.view(mint)).positions.length;
