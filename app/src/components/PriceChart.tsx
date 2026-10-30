@@ -77,8 +77,8 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
       watermark: { visible: true, text: BRAND.toLowerCase(), fontSize: 72, fontFamily: font, fontStyle: "300", color: "rgba(250, 250, 250, 0.045)", horzAlign: "center", vertAlign: "center" },
     });
     series.current = c.addCandlestickSeries({
-      upColor: "#fafafa", downColor: "#0a0a0a", wickUpColor: "#d4d4d4", wickDownColor: "#737373",
-      borderVisible: true, borderUpColor: "#fafafa", borderDownColor: "#737373",
+      upColor: "#2ebd85", downColor: "#f6465d", wickUpColor: "#2ebd85", wickDownColor: "#f6465d",
+      borderVisible: false,
       priceLineColor: "#525252",
     });
     chart.current = c;
