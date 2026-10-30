@@ -15,7 +15,7 @@
     "smoke": "tsx src/devnet-smoke.ts",
     "smoke:rewards": "tsx src/devnet-rewards-smoke.ts",
     "smoke:leverage": "tsx src/devnet-leverage-smoke.ts",
-    "keeper": "tsx src/keeper/index.ts"
+    "keeper": "tsx src/start.ts"
   },
   "dependencies": {
     "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.8",

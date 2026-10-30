@@ -105,7 +105,7 @@ export function curveConfig(
   });
 }
 
-async function main() {
+export async function main() {
   const admin = loadKeypair("ADMIN_KEYPAIR");
   // The fee bot claims for both configs (it must sign claims). For the main
   // coin it sends everything straight to the treasury (see claim-fees.ts).
