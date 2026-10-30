@@ -276,7 +276,7 @@ table.data td { padding: 10px 14px; border-top: 1px solid var(--line-soft); font
 /* homepage banner */
 .hero { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--line); min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center; background: #000; isolation: isolate; }
 .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
-.hero-shade { position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at center, rgba(6,5,16,.35) 0%, rgba(6,5,16,.75) 70%, rgba(6,5,16,.92) 100%), linear-gradient(to bottom, rgba(6,5,16,0) 55%, var(--bg) 100%); }
+.hero-shade { position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at center, rgba(6,5,16,.45) 0%, rgba(6,5,16,.35) 45%, rgba(6,5,16,.7) 100%), linear-gradient(to bottom, rgba(6,5,16,0) 55%, var(--bg) 100%); }
 .hero-content { padding: 48px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 680px; }
 .hero h1 { margin: 0; font-size: clamp(30px, 5.2vw, 56px); font-weight: 600; letter-spacing: -.035em; line-height: 1.05; color: #fff; text-shadow: 0 2px 24px rgba(0,0,0,.6); }
 .hero p { margin: 0; font-size: clamp(14px, 1.6vw, 17px); color: rgba(255,255,255,.82); text-shadow: 0 1px 12px rgba(0,0,0,.6); }
