@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createChart, ColorType, type IChartApi, type ISeriesApi, type UTCTimestamp } from "lightweight-charts";
 import type { Trade } from "@/lib/activity";
+import { BRAND } from "@/lib/config";
 
 const FRAMES = [
   { label: "1m", s: 60 },
@@ -45,6 +46,8 @@ export function PriceChart({ trades, solUsd }: { trades: Trade[]; solUsd: number
       rightPriceScale: { borderColor: "#1c2c32" },
       timeScale: { borderColor: "#1c2c32", timeVisible: true, secondsVisible: false },
       crosshair: { mode: 1 },
+      // Brand watermark behind the candles
+      watermark: { visible: true, text: BRAND.toUpperCase(), fontSize: 64, fontFamily: "Inter, system-ui, sans-serif", fontStyle: "bold", color: "rgba(151, 252, 228, 0.06)", horzAlign: "center", vertAlign: "center" },
     });
     series.current = c.addCandlestickSeries({
       upColor: "#50d2c1", downColor: "#ed7088", wickUpColor: "#50d2c1", wickDownColor: "#ed7088", borderVisible: false,
