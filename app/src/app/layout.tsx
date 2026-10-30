@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProviders } from "@/components/WalletProviders";
 import { TopBar } from "@/components/TopBar";
+import { NetworkBanner } from "@/components/NetworkBanner";
 import { BRAND } from "@/lib/config";
 
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <WalletProviders>
           <TopBar />
+          <NetworkBanner />
           {children}
         </WalletProviders>
       </body>
