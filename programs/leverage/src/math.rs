@@ -44,6 +44,19 @@ pub struct Tier {
     pub min_age_secs: u32,
 }
 
+/// True only in the devnet test build (`--features devnet-test`), which uses
+/// short waits and small pool minimums so every rule can be tested in
+/// minutes. Mainnet builds never enable it; `Global.test_build` records it
+/// on-chain so anyone can check which build is deployed.
+pub const TEST_BUILD: bool = cfg!(feature = "devnet-test");
+
+const fn pick32(real: u32, test: u32) -> u32 {
+    if TEST_BUILD { test } else { real }
+}
+const fn pick64(real: u64, test: u64) -> u64 {
+    if TEST_BUILD { test } else { real }
+}
+
 const fn sol(x: u64) -> u64 {
     x * LAMPORTS_PER_SOL
 }
@@ -53,12 +66,12 @@ const fn half_sol() -> u64 {
 
 /// The tier table agreed for the platform. Index 0 = degen tier.
 pub const TIERS: [Tier; 6] = [
-    Tier { id: 0, min_mcap_usd: 0,          leverage: 2,  max_margin: half_sol(), fee_bps: 50, oi_cap_bps: 500 , profit_cap_x: 3, min_hold_secs: 180, twap_window_secs: 180, min_pool_sol: sol(20), min_age_secs: 1800 },
-    Tier { id: 1, min_mcap_usd: 100_000,    leverage: 3,  max_margin: sol(4),     fee_bps: 50, oi_cap_bps: 500 , profit_cap_x: 5, min_hold_secs: 60,  twap_window_secs: 60,  min_pool_sol: 0,       min_age_secs: 0 },
-    Tier { id: 2, min_mcap_usd: 500_000,    leverage: 5,  max_margin: sol(5),     fee_bps: 50, oi_cap_bps: 500 , profit_cap_x: 5, min_hold_secs: 60,  twap_window_secs: 60,  min_pool_sol: 0,       min_age_secs: 0 },
-    Tier { id: 3, min_mcap_usd: 1_000_000,  leverage: 10, max_margin: sol(5),     fee_bps: 30, oi_cap_bps: 400 , profit_cap_x: 5, min_hold_secs: 60,  twap_window_secs: 60,  min_pool_sol: 0,       min_age_secs: 0 },
-    Tier { id: 4, min_mcap_usd: 5_000_000,  leverage: 10, max_margin: sol(8),     fee_bps: 30, oi_cap_bps: 400 , profit_cap_x: 5, min_hold_secs: 60,  twap_window_secs: 60,  min_pool_sol: 0,       min_age_secs: 0 },
-    Tier { id: 5, min_mcap_usd: 10_000_000, leverage: 10, max_margin: sol(10),    fee_bps: 30, oi_cap_bps: 400 , profit_cap_x: 5, min_hold_secs: 60,  twap_window_secs: 60,  min_pool_sol: 0,       min_age_secs: 0 },
+    Tier { id: 0, min_mcap_usd: 0,          leverage: 2,  max_margin: half_sol(), fee_bps: 50, oi_cap_bps: 500 , profit_cap_x: 3, min_hold_secs: pick32(180, 5), twap_window_secs: pick32(180, 10), min_pool_sol: pick64(sol(20), half_sol()), min_age_secs: pick32(1800, 60) },
+    Tier { id: 1, min_mcap_usd: 100_000,    leverage: 3,  max_margin: sol(4),     fee_bps: 50, oi_cap_bps: 500 , profit_cap_x: 5, min_hold_secs: pick32(60, 5),  twap_window_secs: pick32(60, 10),  min_pool_sol: 0,       min_age_secs: pick32(0, 0) },
+    Tier { id: 2, min_mcap_usd: 500_000,    leverage: 5,  max_margin: sol(5),     fee_bps: 50, oi_cap_bps: 500 , profit_cap_x: 5, min_hold_secs: pick32(60, 5),  twap_window_secs: pick32(60, 10),  min_pool_sol: 0,       min_age_secs: pick32(0, 0) },
+    Tier { id: 3, min_mcap_usd: 1_000_000,  leverage: 10, max_margin: sol(5),     fee_bps: 30, oi_cap_bps: 400 , profit_cap_x: 5, min_hold_secs: pick32(60, 5),  twap_window_secs: pick32(60, 10),  min_pool_sol: 0,       min_age_secs: pick32(0, 0) },
+    Tier { id: 4, min_mcap_usd: 5_000_000,  leverage: 10, max_margin: sol(8),     fee_bps: 30, oi_cap_bps: 400 , profit_cap_x: 5, min_hold_secs: pick32(60, 5),  twap_window_secs: pick32(60, 10),  min_pool_sol: 0,       min_age_secs: pick32(0, 0) },
+    Tier { id: 5, min_mcap_usd: 10_000_000, leverage: 10, max_margin: sol(10),    fee_bps: 30, oi_cap_bps: 400 , profit_cap_x: 5, min_hold_secs: pick32(60, 5),  twap_window_secs: pick32(60, 10),  min_pool_sol: 0,       min_age_secs: pick32(0, 0) },
 ];
 
 /// Highest tier whose market-cap threshold the coin meets.
@@ -196,6 +209,17 @@ mod tests {
         assert_eq!(tier_for_mcap(50_000_000).id, 5);
         let max_pos: Vec<u64> = TIERS.iter().map(|t| t.max_margin * t.leverage as u64 / LAMPORTS_PER_SOL).collect();
         assert_eq!(max_pos, vec![1, 12, 25, 50, 80, 100]);
+    }
+
+    /// The normal (mainnet) build must keep the real waits and minimums.
+    #[cfg(not(feature = "devnet-test"))]
+    #[test]
+    fn mainnet_build_uses_real_safety_values() {
+        assert!(!TEST_BUILD);
+        assert_eq!(TIERS[0].min_age_secs, 1800);
+        assert_eq!(TIERS[0].min_pool_sol, sol(20));
+        assert_eq!(TIERS[0].min_hold_secs, 180);
+        assert!(TIERS[1..].iter().all(|t| t.min_hold_secs == 60 && t.twap_window_secs == 60));
     }
 
     #[test]

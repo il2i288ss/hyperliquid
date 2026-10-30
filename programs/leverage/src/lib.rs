@@ -34,6 +34,7 @@ pub mod leverage {
         g.keeper = ctx.accounts.admin.key();
         g.sol_usd_e6 = sol_usd_e6;
         g.paused = false;
+        g.test_build = math::TEST_BUILD;
         g.bump = ctx.bumps.global;
         ctx.accounts.vault.bump = ctx.bumps.vault;
         Ok(())
@@ -260,6 +261,8 @@ pub struct Global {
     pub keeper: Pubkey,
     pub sol_usd_e6: u64,
     pub paused: bool,
+    /// true = devnet test build (short waits). Must be false on mainnet.
+    pub test_build: bool,
     pub bump: u8,
 }
 
