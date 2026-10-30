@@ -1,0 +1,49 @@
+name: Devnet demo test
+
+# The full tester flow on the stable devnet platform: pump the demo coin past
+# $100K, then open and close 3x long and short in that tier.
+on:
+  workflow_dispatch:
+    inputs:
+      sol_usd:
+        description: Devnet SOL price in USD (makes $100K reachable)
+        default: "2000"
+
+permissions:
+  contents: write
+
+concurrency: devnet
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: scripts } }
+    env:
+      RPC_URL: ${{ vars.DEVNET_RPC_URL || 'https://api.devnet.solana.com' }}
+      ADMIN_KEYPAIR: ${{ github.workspace }}/devnet.json
+      SOL_USD: ${{ inputs.sol_usd }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - name: Wallet and state
+        env:
+          DEVNET_KEYPAIR: ${{ secrets.DEVNET_KEYPAIR }}
+        run: |
+          printf '%s' "$DEVNET_KEYPAIR" > "$ADMIN_KEYPAIR"; chmod 600 "$ADMIN_KEYPAIR"
+          git clone -q --depth 1 -b devnet-state "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/state
+          git clone -q --depth 1 -b devnet-program "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/program
+          echo "LEVERAGE_PROGRAM_ID=$(cat /tmp/program/program-id.txt)" >> "$GITHUB_ENV"
+          node -e 'const s=require("/tmp/state/platform.json"); const c=s.coins.at(-1); console.log(`DEMO_MINT=${c.mint}\nDEMO_POOL=${c.pool}`)' >> "$GITHUB_ENV"
+          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 1.5 2>&1 | tee /tmp/state/wallet.txt
+      - name: Demo test
+        run: npx tsx src/devnet-demo-test.ts
+      - name: Publish results
+        if: always()
+        run: |
+          cp demo-result.json /tmp/state/ 2>/dev/null || true
+          cd /tmp/state
+          git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
+          git add -A && git commit -q -m "devnet demo ${GITHUB_SHA}" || true
+          git push "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" HEAD:devnet-state

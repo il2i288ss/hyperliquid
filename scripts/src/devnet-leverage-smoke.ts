@@ -53,6 +53,9 @@ async function expectError(name: string, ixs: TransactionInstruction[], error: s
 }
 const lamports = async (k: PublicKey) => BigInt(await connection.getBalance(k));
 
+let keeper = admin.publicKey;
+let previousSolUsd = 0n;
+
 async function main() {
   console.log(`program ${programId.toBase58()}  wallet ${admin.publicKey.toBase58()}`);
   const startBal = await lamports(admin.publicKey);
@@ -65,7 +68,12 @@ async function main() {
   // $100K-$500K tier (3x). Test-only numbers.
   const solUsd = 50_000n * 1_000_000n;
   const globalInfo = await connection.getAccountInfo(lev.global);
-  await send([globalInfo ? lev.setParams(admin.publicKey, solUsd, false, admin.publicKey) : lev.initialize(admin.publicKey, solUsd)]);
+  // Keep the live keeper and restore the site's SOL price when the test ends.
+  if (globalInfo) {
+    keeper = new PublicKey(globalInfo.data.subarray(40, 72));
+    previousSolUsd = globalInfo.data.readBigUInt64LE(72);
+  }
+  await send([globalInfo ? lev.setParams(admin.publicKey, solUsd, false, keeper) : lev.initialize(admin.publicKey, solUsd)]);
   check("initialize / set params", true, globalInfo ? "params reset" : "initialized");
 
   // 2. Fund the vault to 0.5 SOL of free capital
@@ -160,9 +168,9 @@ async function main() {
   await expectError("close before hold time rejected", [lev.closePosition(admin.publicKey, mint.publicKey, 1n)], "HoldTime");
 
   // Pause blocks new positions only
-  await send([lev.setParams(admin.publicKey, solUsd, true, admin.publicKey)]);
+  await send([lev.setParams(admin.publicKey, solUsd, true, keeper)]);
   await expectError("pause blocks new positions", [lev.openPosition(admin.publicKey, mint.publicKey, 3n, false, margin, 3)], "Paused");
-  await send([lev.setParams(admin.publicKey, solUsd, false, admin.publicKey)]);
+  await send([lev.setParams(admin.publicKey, solUsd, false, keeper)]);
 
   await send([lev.openPosition(admin.publicKey, mint.publicKey, 4n, false, margin, 3)]);
   check("open 3x short", true, "nonce 4");
@@ -236,6 +244,9 @@ async function main() {
 
 main()
   .catch((e) => check("run", false, (e as Error).stack ?? String(e)))
+  .then(async () => {
+    if (previousSolUsd > 0n) await send([lev.setParams(admin.publicKey, previousSolUsd, false, keeper)]).catch(() => {});
+  })
   .finally(() => {
     fs.writeFileSync("leverage-result.json", JSON.stringify(result, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2));
     const failed = checks.filter((c) => !c.ok).length;
