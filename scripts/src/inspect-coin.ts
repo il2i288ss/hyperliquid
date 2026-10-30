@@ -80,3 +80,24 @@ for (const [label, cfg] of Object.entries(CONFIGS)) {
 
 console.log("\n== Platform wallets ==");
 for (const [label, a] of Object.entries(WALLETS)) console.log(`${label.padEnd(14)} ${a}  ${sol(await connection.getBalance(new PublicKey(a)))} SOL`);
+
+console.log("\n== Creation transaction ==");
+for (const [label, cfg] of Object.entries(CONFIGS)) {
+  const pool = deriveDbcPoolAddress(NATIVE_MINT, mint, new PublicKey(cfg));
+  const acct = await connection.getAccountInfo(pool);
+  if (!acct) continue;
+  console.log(`pool account lamports: ${sol(acct.lamports)} SOL (rent ≈ ${sol(await connection.getMinimumBalanceForRentExemption(acct.data.length))})`);
+  console.log(`metadata account ${metaPda.toBase58()}: ${meta ? "exists" : "MISSING"}`);
+  const sigs = await connection.getSignaturesForAddress(pool, { limit: 1000 });
+  const first = sigs.at(-1);
+  if (!first) continue;
+  const tx = await connection.getParsedTransaction(first.signature, { maxSupportedTransactionVersion: 0 });
+  if (!tx) continue;
+  tx.transaction.message.accountKeys.forEach((k, i) => {
+    const d = (tx.meta!.postBalances[i] - tx.meta!.preBalances[i]) / LAMPORTS_PER_SOL;
+    if (d) console.log(`${k.pubkey.toBase58()} ${d > 0 ? "+" : ""}${d.toFixed(6)}`);
+  });
+  console.log("programs: " + [...new Set(tx.transaction.message.instructions.map((ix) => ix.programId.toBase58()))].join(", "));
+  console.log((tx.meta!.logMessages ?? []).join("\n"));
+  void label;
+}
