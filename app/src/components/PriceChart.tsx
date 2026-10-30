@@ -40,14 +40,14 @@ export function PriceChart({ trades, solUsd }: { trades: Trade[]; solUsd: number
     if (!el.current) return;
     const c = createChart(el.current, {
       autoSize: true,
-      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#8b95a3", fontFamily: "var(--font-mono), monospace" },
-      grid: { vertLines: { color: "#1a1f27" }, horzLines: { color: "#1a1f27" } },
-      rightPriceScale: { borderColor: "#20252e" },
-      timeScale: { borderColor: "#20252e", timeVisible: true, secondsVisible: false },
+      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#869896", fontFamily: "var(--font-mono), monospace" },
+      grid: { vertLines: { color: "#16242a" }, horzLines: { color: "#16242a" } },
+      rightPriceScale: { borderColor: "#1c2c32" },
+      timeScale: { borderColor: "#1c2c32", timeVisible: true, secondsVisible: false },
       crosshair: { mode: 1 },
     });
     series.current = c.addCandlestickSeries({
-      upColor: "#34d399", downColor: "#f0566a", wickUpColor: "#34d399", wickDownColor: "#f0566a", borderVisible: false,
+      upColor: "#50d2c1", downColor: "#ed7088", wickUpColor: "#50d2c1", wickDownColor: "#ed7088", borderVisible: false,
       priceFormat: { type: "price", precision: 8, minMove: 0.00000001 },
     });
     chart.current = c;
