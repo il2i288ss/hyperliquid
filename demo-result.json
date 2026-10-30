@@ -1,0 +1,26 @@
+{
+  "checks": [
+    {
+      "name": "devnet SOL price set",
+      "ok": true,
+      "detail": "$2000 (keeper 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr kept)"
+    },
+    {
+      "name": "coin pumped past $100K",
+      "ok": false,
+      "detail": "$61,073 → $72,328 with 3 SOL"
+    },
+    {
+      "name": "5x rejected at the 3x tier",
+      "ok": true,
+      "detail": "TooMuchLeverage"
+    },
+    {
+      "name": "run",
+      "ok": false,
+      "detail": "TooMuchLeverage"
+    }
+  ],
+  "startMcapUsd": 61073,
+  "endMcapUsd": 72328
+}

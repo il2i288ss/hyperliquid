@@ -1,2 +1,2 @@
 wallet 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr
-balance 4.735003766 SOL
+balance 3.727932441 SOL
