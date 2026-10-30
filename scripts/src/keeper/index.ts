@@ -96,11 +96,12 @@ async function pricesJob() {
 }
 
 async function marketsJob() {
-  const test = await testBuild();
-  const minPoolSol = test ? 0.25 : 10; // register before the 20 SOL unlock so price history builds up
+  // Register before the 20 SOL unlock so price history builds up.
+  const minPoolSol = process.env.MARKET_MIN_POOL_SOL ? Number(process.env.MARKET_MIN_POOL_SOL) : (await testBuild()) ? 0.25 : 10;
   const existing = new Map((await markets()).map((m) => [m.mint.toBase58(), m]));
   const [pools, slot] = await Promise.all([dbc.state.getPoolsByConfig(config), connection.getSlot()]);
 
+  let registered = 0;
   for (const { publicKey: pool, account } of pools) {
     const s = account.poolState;
     const mint = s.baseMint as PublicKey;
@@ -116,8 +117,10 @@ async function marketsJob() {
       const launchedAt = BigInt(Math.floor(Date.now() / 1000 - (slot - Number(s.activationPoint.toString())) * 0.4));
       await send([lev.createMarket(keeper.publicKey, mint, pool, 0, launchedAt)]);
       log("markets", `registered ${mint.toBase58()} (${poolSol.toFixed(2)} SOL in pool)`);
+      registered++;
     }
   }
+  log("markets", `${pools.length} coins, ${existing.size + registered} with long/short (min pool ${minPoolSol} SOL)`);
 }
 
 async function liquidateJob() {

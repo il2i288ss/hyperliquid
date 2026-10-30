@@ -23,6 +23,7 @@ jobs:
       RPC_URL: ${{ vars.DEVNET_RPC_URL || 'https://api.devnet.solana.com' }}
       ADMIN_KEYPAIR: ${{ github.workspace }}/devnet.json
       KEEPER_KEYPAIR: ${{ github.workspace }}/devnet.json
+      MARKET_MIN_POOL_SOL: "0.25"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
