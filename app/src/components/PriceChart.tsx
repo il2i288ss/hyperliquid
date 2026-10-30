@@ -50,7 +50,7 @@ export function PriceChart({ trades, solUsd }: { trades: Trade[]; solUsd: number
       watermark: { visible: true, text: BRAND.toUpperCase(), fontSize: 64, fontFamily: "Inter, system-ui, sans-serif", fontStyle: "bold", color: "rgba(250, 250, 250, 0.05)", horzAlign: "center", vertAlign: "center" },
     });
     series.current = c.addCandlestickSeries({
-      upColor: "#4ade80", downColor: "#f87171", wickUpColor: "#4ade80", wickDownColor: "#f87171", borderVisible: false,
+      upColor: "#fafafa", downColor: "#0a0a0a", wickUpColor: "#fafafa", wickDownColor: "#737373", borderVisible: true, borderUpColor: "#fafafa", borderDownColor: "#737373",
       priceFormat: { type: "price", precision: 8, minMove: 0.00000001 },
     });
     chart.current = c;
