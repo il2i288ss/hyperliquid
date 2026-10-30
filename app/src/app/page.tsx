@@ -111,7 +111,18 @@ function Discover() {
 
   return (
     <main className="page">
-      <h1 className="sr">Discover coins</h1>
+      <section className="hero" aria-label="Obverse">
+        <video className="hero-video" src="/brand/hero.mp4" poster="/brand/hero.jpg" autoPlay muted loop playsInline preload="auto" aria-hidden="true" />
+        <div className="hero-shade" aria-hidden="true" />
+        <div className="hero-content">
+          <h1>Every coin has two sides.</h1>
+          <p>Launch memecoins, earn SOL for holding, and long or short any coin.</p>
+          <div className="hero-actions">
+            <Link href="/launch" className="cta" style={{ width: "auto", minHeight: 44, padding: "0 22px", textDecoration: "none" }}>Launch a coin</Link>
+            <Link href="/docs" className="hero-ghost">How it works</Link>
+          </div>
+        </div>
+      </section>
       <div className="statbar">
         <div className="statbar-stats">
           <div className="stat"><span>Coins launched</span><span>{coins ? coins.length.toLocaleString() : "—"}</span></div>
@@ -120,7 +131,6 @@ function Discover() {
           <div className="stat"><span>Long/short live on</span><span>{coins ? `${lsLive} coins` : "—"}</span></div>
           <div className="stat"><span>Holder rewards</span><span>Every 15 min</span></div>
         </div>
-        <Link href="/launch" className="cta" style={{ width: "auto", minHeight: 40, padding: "0 20px", textDecoration: "none" }}>Launch a coin</Link>
       </div>
       {q && <div className="muted" style={{ fontSize: 12 }}>Results for “{q}” · <Link href="/">clear</Link></div>}
       {error && <p className="msg-err">{error}</p>}
