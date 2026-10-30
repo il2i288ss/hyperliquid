@@ -17,6 +17,8 @@ const FRAMES = [
 ];
 /** Every coin starts on the curve at this market cap (create-partner-config). */
 const LAUNCH_MCAP_SOL = 30;
+/** Trading fee taken from each swap (pool fee), removed from fill prices. */
+const FEE = 0.0375;
 
 type Mode = "mcap" | "price";
 
@@ -29,8 +31,7 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const series = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const line = useRef<ISeriesApi<"Area"> | null>(null);
-  const [style, setStyle] = useState<"line" | "candles">("line");
+
   const fitted = useRef("");
   const [frame, setFrame] = useState(60);
   const [mode, setMode] = useState<Mode>("mcap");
@@ -40,19 +41,35 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
   const candles = useMemo(() => {
     const now = Math.floor(Date.now() / 1000);
     const launchedAt = Math.floor(now - coin.ageSeconds);
-    const points: { t: number; p: number }[] = [{ t: launchedAt, p: LAUNCH_MCAP_SOL / TOTAL_SUPPLY }];
-    [...trades].sort((a, b) => a.time - b.time).forEach((t) => points.push({ t: Math.max(t.time, launchedAt), p: t.priceSol }));
-    if (coin.priceSol > 0) points.push({ t: now, p: coin.priceSol }); // live price
-
-    const byBucket = new Map<number, { open: number; high: number; low: number; close: number }>();
-    for (const { t, p: raw } of points) {
-      const p = raw * scale;
-      const b = Math.floor(t / frame) * frame;
-      const c = byBucket.get(b);
-      if (!c) byBucket.set(b, { open: p, high: p, low: p, close: p });
-      else Object.assign(c, { high: Math.max(c.high, p), low: Math.min(c.low, p), close: p });
+    // Each trade's real before/after price. On a constant-product curve the
+    // average fill price is the geometric mean of the two, so walking back
+    // from today's live price recovers every step exactly (fees removed).
+    const steps: { t: number; pre: number; post: number }[] = [];
+    let p = coin.priceSol > 0 ? coin.priceSol : LAUNCH_MCAP_SOL / TOTAL_SUPPLY;
+    for (const tr of [...trades].sort((a, b) => b.time - a.time)) {
+      if (!(tr.sol > 0 && tr.tokens > 0)) continue;
+      const fill = tr.side === "buy" ? (tr.sol * (1 - FEE)) / tr.tokens : tr.sol / (1 - FEE) / tr.tokens;
+      let pre = (fill * fill) / p;
+      if (!(pre > 0) || pre / p > 20 || p / pre > 20) pre = p; // ignore broken data
+      steps.push({ t: Math.max(tr.time, launchedAt), pre, post: p });
+      p = pre;
     }
-    // Each candle opens where the previous one closed, so there are no gaps.
+    steps.reverse();
+
+    type C = { open: number; high: number; low: number; close: number };
+    const byBucket = new Map<number, C>();
+    const add = (t: number, a: number, b: number) => {
+      const k = Math.floor(t / frame) * frame;
+      const c = byBucket.get(k);
+      const [x, y] = [a * scale, b * scale];
+      if (!c) byBucket.set(k, { open: x, high: Math.max(x, y), low: Math.min(x, y), close: y });
+      else Object.assign(c, { high: Math.max(c.high, x, y), low: Math.min(c.low, x, y), close: y });
+    };
+    add(launchedAt, p, p); // launch price
+    for (const st of steps) add(st.t, st.pre, st.post);
+    add(now, coin.priceSol || p, coin.priceSol || p); // live candle
+
+    // Each candle opens where the previous one closed: no gaps, no jumps.
     let prev: number | null = null;
     return [...byBucket].sort((a, b) => a[0] - b[0]).map(([time, c]) => {
       const open = prev ?? c.open;
@@ -69,7 +86,8 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
       layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#8a8a8a", fontFamily: font, fontSize: 11 },
       grid: { vertLines: { color: "#17161f" }, horzLines: { color: "#17161f" } },
       rightPriceScale: { borderColor: "#201f2b", scaleMargins: { top: 0.15, bottom: 0.1 } },
-      timeScale: { borderColor: "#201f2b", timeVisible: true, secondsVisible: true, rightOffset: 6, barSpacing: 10 },
+      timeScale: { borderColor: "#201f2b", timeVisible: true, secondsVisible: true, rightOffset: 8, barSpacing: 9, minBarSpacing: 3, lockVisibleTimeRangeOnResize: true },
+      handleScale: { axisPressedMouseMove: { time: true, price: true } },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: { color: "#525252", labelBackgroundColor: "#201f2b" },
@@ -80,17 +98,9 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
     });
     series.current = c.addCandlestickSeries({
       upColor: "#2ebd85", downColor: "#f6465d", wickUpColor: "#2ebd85", wickDownColor: "#f6465d",
-      borderVisible: false,
-      priceLineColor: "#525252",
-      visible: false,
-    });
-    line.current = c.addAreaSeries({
-      lineWidth: 2,
-      lineColor: "#2ebd85",
-      topColor: "rgba(46, 189, 133, 0.28)",
-      bottomColor: "rgba(46, 189, 133, 0)",
-      priceLineColor: "#525252",
-      crosshairMarkerRadius: 4,
+      borderVisible: true, borderUpColor: "#2ebd85", borderDownColor: "#f6465d",
+      priceLineColor: "#4a4866",
+      priceLineStyle: 2,
     });
     chart.current = c;
     return () => c.remove();
@@ -101,21 +111,10 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
     chart.current?.applyOptions({ localization: { priceFormatter: mode === "mcap" ? usd : fmtPrice } });
     const priceFormat = { type: "custom" as const, minMove: 1e-12, formatter: mode === "mcap" ? usd : fmtPrice };
     series.current?.applyOptions({ priceFormat });
-    line.current?.applyOptions({ priceFormat });
   }, [mode]);
-
-  // Graph (default) or candles; the graph is green when up since launch, red when down.
-  useEffect(() => {
-    series.current?.applyOptions({ visible: style === "candles" });
-    line.current?.applyOptions({ visible: style === "line" });
-  }, [style]);
 
   useEffect(() => {
     series.current?.setData(candles);
-    line.current?.setData(candles.map((c) => ({ time: c.time, value: c.close })));
-    const up = candles.length < 2 || candles[candles.length - 1].close >= candles[0].open;
-    const [r, g, b] = up ? [46, 189, 133] : [246, 70, 93];
-    line.current?.applyOptions({ lineColor: `rgb(${r}, ${g}, ${b})`, topColor: `rgba(${r}, ${g}, ${b}, 0.28)`, bottomColor: `rgba(${r}, ${g}, ${b}, 0)` });
     // Fit once per coin/timeframe/mode; afterwards keep the user's zoom.
     const key = `${frame}:${mode}`;
     if (candles.length && fitted.current !== key) {
@@ -132,15 +131,9 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
             <button key={f.s} type="button" className={frame === f.s ? "on" : ""} aria-pressed={frame === f.s} onClick={() => setFrame(f.s)}>{f.label}</button>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <div className="seg" role="group" aria-label="Chart style">
-          <button type="button" className={style === "line" ? "on" : ""} aria-pressed={style === "line"} onClick={() => setStyle("line")}>Graph</button>
-          <button type="button" className={style === "candles" ? "on" : ""} aria-pressed={style === "candles"} onClick={() => setStyle("candles")}>Candles</button>
-        </div>
         <div className="seg" role="group" aria-label="Chart value">
           <button type="button" className={mode === "mcap" ? "on" : ""} aria-pressed={mode === "mcap"} onClick={() => setMode("mcap")}>Market cap</button>
           <button type="button" className={mode === "price" ? "on" : ""} aria-pressed={mode === "price"} onClick={() => setMode("price")}>Price</button>
-        </div>
         </div>
       </div>
       <div style={{ position: "relative", height: 400 }}>
