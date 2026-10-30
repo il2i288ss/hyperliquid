@@ -42,8 +42,8 @@ console.log("== Mint ==");
 console.log(JSON.stringify((info.value.data as { parsed?: unknown }).parsed ?? "not a token mint", null, 2));
 
 const [metaPda] = PublicKey.findProgramAddressSync(
-  [Buffer.from("metadata"), new PublicKey("metaqbxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx").toBuffer(), mint.toBuffer()],
-  new PublicKey("metaqbxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
+  [Buffer.from("metadata"), new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s").toBuffer(), mint.toBuffer()],
+  new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"),
 );
 const meta = await connection.getAccountInfo(metaPda);
 if (meta) {
