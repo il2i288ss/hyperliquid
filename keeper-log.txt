@@ -2,4 +2,6 @@
 > keeper
 > tsx src/keeper/index.ts
 
-2026-10-30T09:47:00.356Z [keeper] starting as 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr · rewards off
+2026-10-30T09:49:34.745Z [keeper] starting as 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr · rewards off
+[keeper/markets] code 3012
+[keeper/markets] code 3012
