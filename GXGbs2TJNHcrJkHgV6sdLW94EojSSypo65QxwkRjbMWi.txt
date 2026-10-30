@@ -1,0 +1,125 @@
+== Mint ==
+{
+  "info": {
+    "decimals": 6,
+    "freezeAuthority": null,
+    "isInitialized": true,
+    "mintAuthority": null,
+    "supply": "1000000000000000"
+  },
+  "type": "mint"
+}
+
+== Metadata ==
+name: obverse
+symbol: OBVERSE
+uri: https://gateway.pinata.cloud/ipfs/QmcwjA1pSstL2NUzAHaByot6Me3zSPAm4bMASuVrqTwePS
+
+== Pool (main coin config 4eum1BgtpwPp9HtGSbaE2Xyq3zJeV5k8sYg8EskVk6Gh) ==
+pool: pFueozdHX7V8qPAhGvtr5jfpJ5p9mCcZbvJsJErjs5m
+SOL in curve: 19.695629
+price: 7.7501e-8 SOL/token, mcap ≈ 77.50 SOL
+migrated: 0
+{
+  "volatilityTracker": {
+    "lastUpdateTimestamp": "0",
+    "padding": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "sqrtPriceReference": "0",
+    "volatilityAccumulator": "0",
+    "volatilityReference": "0"
+  },
+  "config": "4eum1BgtpwPp9HtGSbaE2Xyq3zJeV5k8sYg8EskVk6Gh",
+  "creator": "AUUcYgSGYo7hUD9cV8PeG6ybHKL2jbYNTvnv2TUTWokj",
+  "baseMint": "GXGbs2TJNHcrJkHgV6sdLW94EojSSypo65QxwkRjbMWi",
+  "baseVault": "2nmTqUfVGyYidM9aGmEFjPbNuKwNRfLsJMBGxMr1EdMn",
+  "quoteVault": "HwZEui8ANiMDHWNFcHyskZTorQDLa5gZLmrue5zsKFcj",
+  "baseReserve": "591533409486258",
+  "quoteReserve": "19695629302",
+  "protocolBaseFee": "0",
+  "protocolQuoteFee": "506129972",
+  "partnerBaseFee": "0",
+  "partnerQuoteFee": "0",
+  "sqrtPrice": "162394907660799753",
+  "activationPoint": "463417199",
+  "poolType": 0,
+  "isMigrated": 0,
+  "isPartnerWithdrawSurplus": 0,
+  "isProtocolWithdrawSurplus": 0,
+  "migrationProgress": 0,
+  "isWithdrawLeftover": 0,
+  "isCreatorWithdrawSurplus": 0,
+  "migrationFeeWithdrawStatus": 0,
+  "metrics": {
+    "totalProtocolBaseFee": "0",
+    "totalProtocolQuoteFee": "3113682911",
+    "totalTradingBaseFee": "0",
+    "totalTradingQuoteFee": "13705288220"
+  },
+  "finishCurveTimestamp": "0",
+  "creatorBaseFee": "0",
+  "creatorQuoteFee": "0",
+  "legacyCreationFeeBits": 0,
+  "creationFeeBits": 0,
+  "hasSwap": 1,
+  "padding0": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "protocolLiquidityMigrationFeeBps": 20,
+  "padding1": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "protocolMigrationBaseFeeAmount": "0",
+  "protocolMigrationQuoteFeeAmount": "0",
+  "padding2": [
+    "0",
+    "0",
+    "0"
+  ]
+}
+
+== Fees waiting in the pool ==
+{
+  "current": {
+    "partnerBaseFee": "0",
+    "partnerQuoteFee": "0",
+    "creatorBaseFee": "0",
+    "creatorQuoteFee": "0"
+  },
+  "total": {
+    "totalTradingBaseFee": "0",
+    "totalTradingQuoteFee": "13705288220"
+  }
+}
+/home/runner/work/hyperliquid/hyperliquid/scripts/node_modules/@solana/web3.js/src/connection.ts:5239
+        throw new SolanaJSONRPCError(res.error, 'failed to get transactions');
+              ^
+
+SolanaJSONRPCError: failed to get transactions: Too many requests for a specific RPC call
+    at unsafeRes (/home/runner/work/hyperliquid/hyperliquid/scripts/node_modules/@solana/web3.js/src/connection.ts:5239:15)
+    at Array.map (<anonymous>)
+    at Connection.getTransactions (/home/runner/work/hyperliquid/hyperliquid/scripts/node_modules/@solana/web3.js/src/connection.ts:5236:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/work/hyperliquid/hyperliquid/scripts/src/inspect-coin.ts:95:17) {
+  code: 429,
+  data: undefined
+}
+
+Node.js v22.23.4
