@@ -5,6 +5,7 @@
  *   markets    every 60 s  register coins that reached enough liquidity for
  *                          long/short; switch leverage off when a coin graduates
  *   liquidate  every 10 s  close positions that lost 90% of their margin
+ *   solprice   every  5 m  keep the on-chain SOL/USD (used for tiers) current
  *   snapshot   every  3 m  holder balances (random offset)       [REWARDS=on]
  *   payout     every 15 m  claim fees -> split -> pay holders     [REWARDS=on]
  *
@@ -22,6 +23,7 @@ import { claimFees } from "../claim-fees.js";
 import { splitFees } from "../split-fees.js";
 import { snapshotAll } from "../rewards/snapshot.js";
 import { payHolders } from "../rewards/airdrop.js";
+import { solUsdNow } from "../sol-price.js";
 
 const keeper = loadKeypair("KEEPER_KEYPAIR");
 // Long/short jobs run only when a program id is set (off on mainnet until audited).
@@ -151,6 +153,19 @@ async function liquidateJob() {
   }
 }
 
+async function solPriceJob() {
+  const info = await connection.getAccountInfo(lev.global);
+  if (!info) return;
+  const d = info.data;
+  const admin = new PublicKey(d.subarray(8, 40));
+  if (d[81] === 1 || !admin.equals(keeper.publicKey)) return; // devnet test build, or not our program
+  const current = Number(d.readBigUInt64LE(72)) / 1e6;
+  const now = await solUsdNow();
+  if (Math.abs(now - current) / current < 0.01) return;
+  await send([lev.setParams(keeper.publicKey, BigInt(Math.round(now * 1e6)), d[80] === 1, new PublicKey(d.subarray(40, 72)))]);
+  log("solprice", `SOL/USD $${current.toFixed(2)} -> $${now.toFixed(2)}`);
+}
+
 async function payoutJob() {
   // Main coin: every fee straight to the treasury.
   if (process.env.MAIN_COIN_CONFIG) await claimFees(true).catch((e) => alert("payout/main", e));
@@ -164,6 +179,7 @@ if (LEVERAGE) {
   every("prices", 8_000, pricesJob);
   every("markets", 60_000, marketsJob);
   every("liquidate", 10_000, liquidateJob);
+  every("solprice", 5 * 60_000, solPriceJob);
 }
 if (REWARDS) {
   every("snapshot", 150_000, snapshotAll, 60_000);

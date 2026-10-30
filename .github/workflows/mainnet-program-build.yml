@@ -1,0 +1,57 @@
+name: Mainnet program build
+
+# Builds the long/short program with the REAL safety values (no devnet-test
+# feature), after its unit tests pass, and publishes the .so + program-id
+# keypair + IDL to the `mainnet-program` branch. Deploying is done from the
+# Codespace by scripts/setup-longshort-mainnet.sh with the fee bot wallet,
+# so no mainnet key ever goes to GitHub.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: mainnet-program
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Solana CLI + Anchor
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 avm --locked --force
+          avm install 0.31.1 && avm use 0.31.1
+      - name: Unit tests (real values)
+        run: cargo test --manifest-path programs/leverage/Cargo.toml
+      - name: Program id
+        run: |
+          mkdir -p target/deploy
+          if git fetch -q --depth 1 origin mainnet-program 2>/dev/null && git show FETCH_HEAD:program-keypair.json > target/deploy/leverage-keypair.json 2>/dev/null; then
+            echo "Reusing program id"
+          else
+            solana-keygen new --no-bip39-passphrase --silent -o target/deploy/leverage-keypair.json --force
+          fi
+          echo "PROGRAM_ID=$(solana-keygen pubkey target/deploy/leverage-keypair.json)" >> "$GITHUB_ENV"
+      - name: Build (mainnet values)
+        run: |
+          anchor keys sync
+          anchor build
+          ls -la target/deploy
+      - name: Publish
+        run: |
+          mkdir -p /tmp/pub
+          cp target/deploy/leverage.so /tmp/pub/leverage.so
+          cp target/deploy/leverage-keypair.json /tmp/pub/program-keypair.json
+          cp target/idl/leverage.json /tmp/pub/leverage.json
+          echo "$PROGRAM_ID" > /tmp/pub/program-id.txt
+          sha256sum /tmp/pub/leverage.so > /tmp/pub/leverage.so.sha256
+          cd /tmp/pub
+          git init -q -b mainnet-program
+          git config user.name ci && git config user.email ci@users.noreply.github.com
+          git add -A && git commit -q -m "mainnet program ${PROGRAM_ID} @ ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" mainnet-program
