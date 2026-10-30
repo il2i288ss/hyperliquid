@@ -5,7 +5,7 @@
  *   npx tsx src/claim-fees.ts          (platform coins -> fee splitter wallet)
  *   npx tsx src/claim-fees.ts --main   (main coin      -> team wallet)
  *
- * Run it from cron / a keeper every hour, or wire it to an admin button.
+ * Runs every 15 minutes before split + airdrop, or from an admin button.
  */
 import { PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import BN from "bn.js";

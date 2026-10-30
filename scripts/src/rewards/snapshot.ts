@@ -1,7 +1,8 @@
 /**
  * Records every holder's balance for each coin that has rewards waiting.
- * Run every 15 minutes at a random offset (see README cron example), so
- * nobody can time a buy right before a snapshot.
+ * Run every 3 minutes at a random offset (see README cron example), so each
+ * 15-minute payout averages ~5 snapshots and nobody can time a buy right
+ * before one.
  *
  *   npx tsx src/rewards/snapshot.ts
  */

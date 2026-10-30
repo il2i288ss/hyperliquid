@@ -3,7 +3,7 @@
  * the last payout, splits that coin's holder pot pro-rata, and sends SOL in
  * batched transactions from the holder pot wallet.
  *
- *   npx tsx src/rewards/airdrop.ts          (run hourly)
+ *   npx tsx src/rewards/airdrop.ts          (run every 15 minutes)
  *   npx tsx src/rewards/airdrop.ts --dry    (print, send nothing)
  */
 import {

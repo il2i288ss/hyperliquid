@@ -62,8 +62,8 @@ rustc --edition 2021 --test programs/leverage/src/math.rs -o /tmp/mt && /tmp/mt 
 ## Keeper jobs (cron)
 
 ```cron
-0 * * * *      cd scripts && npm run claim && npm run split && npm run airdrop
-*/15 * * * *   sleep $((RANDOM % 600)); cd scripts && npm run snapshot
+*/15 * * * *   cd scripts && npm run claim && npm run split && npm run airdrop   # pay holders every 15 min
+*/3 * * * *    sleep $((RANDOM % 150)); cd scripts && npm run snapshot          # ~5 random snapshots per payout
 ```
 
 Graduated coins earn fees on their DAMM v2 LP position; add a claim using the
