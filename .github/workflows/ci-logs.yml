@@ -29,6 +29,7 @@ jobs:
           SDK=scripts/node_modules/@meteora-ag/dynamic-bonding-curve-sdk
           cp $SDK/package.json /tmp/out/sdk/
           find $SDK/dist -name "*.d.ts" -exec cp {} /tmp/out/sdk/ \; || true
+          cp $SDK/dist/index.js /tmp/out/sdk/index.js 2>/dev/null || cp $SDK/dist/index.cjs /tmp/out/sdk/index.js 2>/dev/null || true
           (cd scripts && npm ls --depth=0) > /tmp/out/versions.txt 2>&1 || true
       - name: Push to ci-logs branch
         run: |

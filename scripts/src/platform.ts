@@ -3,8 +3,13 @@
 
 export const LAMPORTS_PER_SOL = 1_000_000_000;
 
-/** Launch fee charged by the Meteora config when a coin is created. */
-export const LAUNCH_FEE_LAMPORTS = 30_000_000; // 0.03 SOL
+/**
+ * Launch fee charged by the Meteora config when a coin is created.
+ * Meteora keeps 10% (PROTOCOL_POOL_CREATION_FEE_PERCENT), so the platform
+ * nets 0.027 SOL per launch.
+ */
+export const LAUNCH_FEE_SOL = 0.03;
+export const LAUNCH_FEE_LAMPORTS = 30_000_000;
 
 /**
  * Pool trading fee. Meteora keeps 20% of it, so 3.75% leaves the platform

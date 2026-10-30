@@ -23,7 +23,6 @@ async function main() {
   const deployments = JSON.parse(fs.readFileSync("deployments.json", "utf8"));
   const config = new PublicKey(isMain ? deployments.mainCoinConfig : deployments.platformConfig);
 
-  // VERIFY: method name in your SDK version (state service).
   const pools = await dbc.state.getPoolsByConfig(config);
   console.log(`Found ${pools.length} pools under ${config.toBase58()}`);
 
@@ -34,7 +33,7 @@ async function main() {
 
   let claimed = 0;
   for (const { publicKey: pool, account } of pools) {
-    const mint = (account as any).baseMint.toBase58(); // VERIFY field name
+    const mint = account.baseMint.toBase58();
     try {
       const before = await bal();
       const tx = await dbc.partner.claimPartnerTradingFeeToReceiver({
@@ -57,11 +56,8 @@ async function main() {
     if (!isMain) {
       try {
         const before = await bal();
-        const tx = await dbc.partner.claimPartnerPoolCreationFee({
-          feeClaimer: claimer.publicKey,
-          payer: claimer.publicKey,
-          pool,
-        } as any); // VERIFY params
+        // Meteora keeps 10% of each launch fee; the rest comes to us.
+        const tx = await dbc.partner.claimPartnerPoolCreationFee({ pool, feeReceiver: receiver });
         await sendAndConfirmTransaction(connection, tx, [claimer]);
         const gained = (await bal()) - before;
         if (gained > 0n) addLaunchFees(gained); // launch fees -> 100% treasury

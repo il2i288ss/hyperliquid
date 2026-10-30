@@ -14,7 +14,6 @@ export function client(connection: Connection) {
 }
 
 export function poolForMint(mint: PublicKey) {
-  // VERIFY: argument order (quoteMint, baseMint, config) in your SDK version.
   return deriveDbcPoolAddress(NATIVE_MINT, mint, CONFIG);
 }
 
@@ -46,31 +45,20 @@ export async function buildLaunchTx(opts: {
     poolCreator: creator,
   };
 
-  let tx: Transaction;
-  if (firstBuySol > 0) {
-    // VERIFY: return shape of createPoolWithFirstBuy in your SDK version.
-    const res: any = await dbc.pool.createPoolWithFirstBuy({
-      createPoolParam,
-      firstBuyParam: {
-        buyer: creator,
-        buyAmount: new BN(Math.round(firstBuySol * 1e9)),
-        minimumAmountOut: new BN(1),
-        referralTokenAccount: null,
-      },
-    });
-    if (res instanceof Transaction) {
-      tx = res;
-    } else {
-      // Some SDK versions return the create and buy parts separately;
-      // combine them so the buy lands in the launch transaction.
-      tx = new Transaction();
-      for (const part of [res.createPoolTx, res.swapBuyTx]) {
-        if (part) tx.add(...part.instructions);
-      }
-    }
-  } else {
-    tx = await dbc.pool.createPool(createPoolParam);
-  }
+  // One transaction: create the coin and (optionally) the creator's first
+  // buy, which pays the normal fee instead of the 90% launch-slot fee.
+  const tx: Transaction =
+    firstBuySol > 0
+      ? await dbc.creator.createPoolWithFirstBuy({
+          createPoolParam,
+          firstBuyParam: {
+            buyer: creator,
+            buyAmount: new BN(Math.round(firstBuySol * 1e9)),
+            minimumAmountOut: new BN(1),
+            referralTokenAccount: null,
+          },
+        })
+      : await dbc.creator.createPool(createPoolParam);
 
   const { blockhash } = await connection.getLatestBlockhash("confirmed");
   tx.recentBlockhash = blockhash;
@@ -92,17 +80,21 @@ export async function buildSwapTx(opts: {
   const dbc = client(connection);
   const pool = poolForMint(mint);
   const virtualPool = await dbc.state.getPool(pool);
-  const poolConfig = await dbc.state.getPoolConfig(CONFIG);
+  if (!virtualPool) throw new Error("Coin not found on this launchpad");
+  const poolConfig = await dbc.state.getPoolConfig(virtualPool.config);
+  if (!poolConfig) throw new Error("Coin config not found");
   const currentPoint = new BN(await connection.getSlot());
 
-  // VERIFY: swapQuote params/return in your SDK version.
-  const quote: any = await dbc.pool.swapQuote({
+  // minimumAmountOut makes the swap fail instead of paying the 90%
+  // launch-slot fee if it lands in the launch slot.
+  const quote = dbc.pool.swapQuote({
     virtualPool,
     config: poolConfig,
     swapBaseForQuote: !buy,
     amountIn,
     slippageBps,
     hasReferral: false,
+    eligibleForFirstSwapWithMinFee: false,
     currentPoint,
   });
 

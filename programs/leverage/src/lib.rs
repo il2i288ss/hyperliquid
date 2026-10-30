@@ -220,15 +220,21 @@ fn read_pool(kind: u8, data: &[u8]) -> Result<(u128, u64)> {
         1 => (DAMM_SQRT_PRICE_OFFSET, DAMM_TOKEN_B_OFFSET),
         _ => return err!(ErrorCode::BadPool),
     };
-    require!(sqrt_off > 0 && data.len() >= sol_off + 8, ErrorCode::PoolLayoutNotSet);
+    require!(sqrt_off > 0 && data.len() >= (sqrt_off + 16).max(sol_off + 8), ErrorCode::PoolLayoutNotSet);
     let sqrt = u128::from_le_bytes(data[sqrt_off..sqrt_off + 16].try_into().unwrap());
     let sol = u64::from_le_bytes(data[sol_off..sol_off + 8].try_into().unwrap());
     let price = price_from_sqrt_q64(sqrt).ok_or(ErrorCode::MathOverflow)?;
     Ok((price, sol))
 }
-// Fill these from the Meteora IDLs (8-byte discriminator included). VERIFY
-const DBC_SQRT_PRICE_OFFSET: usize = 0;
-const DBC_QUOTE_RESERVE_OFFSET: usize = 0;
+// Byte offsets inside Meteora account data (8-byte discriminator included).
+// DBC VirtualPool (`poolState`), computed from the IDL in
+// @meteora-ag/dynamic-bonding-curve-sdk 1.5.13: account size 424.
+// On the curve, quoteReserve is the real SOL deposited; it understates depth
+// early on, which makes virtual price impact larger (safer), not smaller.
+const DBC_SQRT_PRICE_OFFSET: usize = 280;
+const DBC_QUOTE_RESERVE_OFFSET: usize = 240;
+// DAMM v2 Pool: fill from @meteora-ag/cp-amm-sdk IDL before enabling
+// leverage on graduated coins (phase 2). Zero = not configured = rejected.
 const DAMM_SQRT_PRICE_OFFSET: usize = 0;
 const DAMM_TOKEN_B_OFFSET: usize = 0;
 
