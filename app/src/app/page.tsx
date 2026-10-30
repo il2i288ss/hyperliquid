@@ -40,7 +40,7 @@ function writePref(key: string, v: unknown) {
 /** Pinned labels on the banner art. Positions are on the 1440×680 artwork. */
 const PINS = [
   { node: [900, 216], tag: [772, 136], text: "Long · up to 10x" },
-  { node: [1180, 122], tag: [1236, 100], text: "Holders paid every 15 min" },
+  { node: [1180, 122], tag: [1196, 92], text: "Holders paid every 15 min" },
   { node: [1286, 402], tag: [1290, 456], text: "Short · paid in SOL" },
   { node: [968, 410], tag: [812, 470], text: "TP / SL at any market cap" },
 ] as const;
