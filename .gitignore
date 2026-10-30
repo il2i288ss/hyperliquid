@@ -6,3 +6,5 @@ target/
 keys/
 data/
 deployments.json
+devnet.json
+smoke-result.json
