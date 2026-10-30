@@ -42,6 +42,13 @@ done
 addr() { cat "$DIR/$1.addr"; }
 FEE_BOT="$(addr fee-bot)"; PAYOUT="$(addr payout-bot)"; RESERVE="$(addr vault-reserve)"
 
+if [ -f "$DIR/deployments.json" ]; then
+  # Already set up: just print the settings again.
+  cp "$DIR/deployments.json" deployments.json
+  SKIP_FUNDING=1
+fi
+
+if [ -z "${SKIP_FUNDING:-}" ]; then
 echo
 echo "Fee bot wallet: $FEE_BOT"
 echo "Send it 0.1 SOL from your Phantom (MAINNET). It pays for creating the configs"
@@ -49,6 +56,7 @@ echo "(about 0.01 SOL) and the bot's transaction fees afterwards."
 echo "Also send 0.05 SOL to the payout bot: $PAYOUT"
 echo
 npx tsx src/wait-balance.ts "$FEE_BOT" 0.05
+fi
 
 if [ -f deployments.json ] && grep -q mainnet deployments.json 2>/dev/null; then
   echo "Configs already created."
