@@ -32,13 +32,17 @@ jobs:
             printf '%s' "$DEVNET_KEYPAIR" > "$ADMIN_KEYPAIR"; chmod 600 "$ADMIN_KEYPAIR"
           fi
           npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.5
-      - name: Smoke test
+      - name: Launchpad test
         run: npm run smoke
+      - name: Holder rewards test
+        if: always()
+        run: npm run smoke:rewards
       - name: Publish results
         if: always()
         run: |
           mkdir -p /tmp/state
           cp smoke-result.json /tmp/state/ 2>/dev/null || echo '{"error":"no result"}' > /tmp/state/smoke-result.json
+          cp rewards-result.json /tmp/state/ 2>/dev/null || echo '{"error":"no result"}' > /tmp/state/rewards-result.json
           cd /tmp/state
           git init -q -b devnet-state
           git config user.name "ci" && git config user.email "ci@users.noreply.github.com"

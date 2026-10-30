@@ -12,9 +12,15 @@ import { connection } from "../env.js";
 import { read, write, type Ledger } from "./store.js";
 
 /** Wallets that never earn rewards (pools, vault, treasury, team...). */
-const EXCLUDED = new Set((process.env.REWARD_EXCLUDED ?? "").split(",").filter(Boolean));
+const list = (v?: string) => new Set((v ?? "").split(",").map((x) => x.trim()).filter(Boolean));
+const EXCLUDED = list(process.env.REWARD_EXCLUDED);
+/** Program-owned wallets that SHOULD earn (e.g. a holder's Squads multisig). */
+const INCLUDED = list(process.env.REWARD_INCLUDED);
 
-export async function holderBalances(mint: PublicKey): Promise<Record<string, string>> {
+export async function holderBalances(
+  mint: PublicKey,
+  alsoExclude: Set<string> = new Set(),
+): Promise<Record<string, string>> {
   const accounts = await connection.getParsedProgramAccounts(TOKEN_PROGRAM_ID, {
     filters: [{ dataSize: 165 }, { memcmp: { offset: 0, bytes: mint.toBase58() } }],
   });
@@ -23,11 +29,11 @@ export async function holderBalances(mint: PublicKey): Promise<Record<string, st
     const info = (account.data as any).parsed?.info;
     const owner: string | undefined = info?.owner;
     const amount = BigInt(info?.tokenAmount?.amount ?? "0");
-    if (!owner || amount === 0n || EXCLUDED.has(owner)) continue;
+    if (!owner || amount === 0n || EXCLUDED.has(owner) || alsoExclude.has(owner)) continue;
     // Program-owned addresses (PDAs) are pools, vaults and lockers, not
     // people: skip them. (This also skips multisig wallets; whitelist them
     // via REWARD_INCLUDED if needed.)
-    if (!PublicKey.isOnCurve(new PublicKey(owner).toBytes())) continue;
+    if (!INCLUDED.has(owner) && !PublicKey.isOnCurve(new PublicKey(owner).toBytes())) continue;
     out[owner] = (out[owner] ?? 0n) + amount;
   }
   return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.toString()]));
