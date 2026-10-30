@@ -1,0 +1,93 @@
+{
+  "checks": [
+    {
+      "name": "initialize / set params",
+      "ok": true,
+      "detail": "initialized"
+    },
+    {
+      "name": "vault funded (anyone can deposit)",
+      "ok": true,
+      "detail": "1 SOL in vault"
+    },
+    {
+      "name": "create market",
+      "ok": true,
+      "detail": "HYjy1JYsXei3ztZ5SoyM2Feo8ZH1xdaxyWpLE8tSWZQY"
+    },
+    {
+      "name": "no trading without price history",
+      "ok": true,
+      "detail": "rejected with StalePrice"
+    },
+    {
+      "name": "price spam ignored (8 s spacing)",
+      "ok": true,
+      "detail": "1 observation(s) recorded"
+    },
+    {
+      "name": "pool SOL read from Meteora",
+      "ok": true,
+      "detail": "0.48125 SOL"
+    },
+    {
+      "name": "5x rejected on a 3x-tier coin",
+      "ok": true,
+      "detail": "rejected with TooMuchLeverage"
+    },
+    {
+      "name": "open 3x long",
+      "ok": true,
+      "detail": "tier 1, size 0.015 SOL"
+    },
+    {
+      "name": "per-coin cap enforced",
+      "ok": true,
+      "detail": "rejected with CapReached"
+    },
+    {
+      "name": "close before hold time rejected",
+      "ok": true,
+      "detail": "rejected with HoldTime"
+    },
+    {
+      "name": "pause blocks new positions",
+      "ok": true,
+      "detail": "rejected with Paused"
+    },
+    {
+      "name": "open 3x short",
+      "ok": true,
+      "detail": "nonce 4"
+    },
+    {
+      "name": "healthy position can't be liquidated",
+      "ok": true,
+      "detail": "rejected with NotLiquidatable"
+    },
+    {
+      "name": "close long: paid from vault, less impact + fees",
+      "ok": true,
+      "detail": "margin 0.005, paid back 0.004044805 SOL"
+    },
+    {
+      "name": "position account closed",
+      "ok": true,
+      "detail": "rent returned"
+    },
+    {
+      "name": "short liquidated after pump",
+      "ok": false,
+      "detail": "NotLiquidatable"
+    },
+    {
+      "name": "books balanced (no open interest left)",
+      "ok": false,
+      "detail": "long 0, short 15000000, locked margin 5000000"
+    }
+  ],
+  "program": "F2vF7Xo4huUnhutSoyCLSLAfzyDdg9bAXeJb6M7RN9jH",
+  "mint": "9ctHx2BMwR2EYtAdKZMbgjxdGfQzwk9ifxDieC78C6Ei",
+  "poolSol": 0.48125,
+  "longPayout": 0.004044805
+}
