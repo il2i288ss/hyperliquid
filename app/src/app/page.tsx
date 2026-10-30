@@ -80,6 +80,23 @@ function Hero() {
 /** Long / short status for one coin, all live: vault, open interest, leverage. */
 function Ticket({ coin }: { coin: Coin }) {
   const lev = useLeverage(coin.mint);
+  if (coin.main) {
+    return (
+      <aside className="ticket" aria-label={coin.symbol}>
+        <div className="ticket-head"><span>{coin.symbol} · Official coin</span><span className="mono muted">MC {usd(coin.mcapUsd)}</span></div>
+        <div className="rows">
+          <div><span>Price</span><span>{price(coin.priceUsd)}</span></div>
+          <div><span>Liquidity</span><span>{coin.quoteReserveSol.toFixed(2)} SOL</span></div>
+        </div>
+        <Link href={`/coin/${coin.mint}`} className="btn-primary wide">Buy {coin.symbol}</Link>
+        <p className="note">The platform&apos;s own coin. Buy and sell only; long / short isn&apos;t offered on it.</p>
+      </aside>
+    );
+  }
+  return <LsTicket coin={coin} lev={lev} />;
+}
+
+function LsTicket({ coin, lev }: { coin: Coin; lev: ReturnType<typeof useLeverage> }) {
   const [long, setLong] = useState(true);
   const tier = tierFor(coin.mcapUsd);
   const m = lev.market;
@@ -119,7 +136,7 @@ function Row({ c, on, pick }: { c: Coin; on: boolean; pick: () => void }) {
       <div className="who">
         <CoinAvatar mint={c.mint} name={c.name} image={c.image} zoom />
         <div>
-          <span className="name-line"><b>{c.name}</b><span className="muted">{c.symbol}</span>{c.leverage && <span className="ls-tag" title="Long / short is open"><SplitCoin size={11} />{tier.leverage}x</span>}</span>
+          <span className="name-line"><b>{c.name}</b><span className="muted">{c.symbol}</span>{c.main && <span className="ls-tag">Official</span>}{c.leverage && <span className="ls-tag" title="Long / short is open"><SplitCoin size={11} />{tier.leverage}x</span>}</span>
           <span className="meta-line">
             <CopyButton value={c.mint} label="" />
             <Socials links={c.links} size={14} />

@@ -152,6 +152,7 @@ function CoinPage() {
               <span className="mono">by {short(coin.creator)}</span>
               {coin.leverage && <span className="ls-tag"><SplitCoin size={12} />Long / short · up to {tier.leverage}x</span>}
               {coin.graduated && <span className="ls-tag">Graduated</span>}
+              {coin.main && <span className="ls-tag">Official coin</span>}
             </div>
           </div>
         </div>
@@ -175,7 +176,7 @@ function CoinPage() {
           <section className="panel">
             <div className="subtabs" role="tablist" aria-label="Activity">
               {([["trades", "Trades", trades.length], ["positions", "Positions", lev.positions.length], ["holders", "Holders", holders.length]] as const)
-                .filter(([k]) => LEVERAGE_ENABLED || k !== "positions")
+                .filter(([k]) => (LEVERAGE_ENABLED && !coin.main) || k !== "positions")
                 .map(([k, label, n]) => (
                   <button key={k} type="button" role="tab" aria-selected={tab === k} className={`subtab${tab === k ? " on" : ""}`} onClick={() => setTab(k)}>
                     {label}{n > 0 && <span className="count">{n}</span>}
@@ -194,21 +195,21 @@ function CoinPage() {
 
         <aside className="coin-side">
           <section className="panel pad trade-box">
-            <div className="tabs three" role="tablist" aria-label="Order type">
-              {([["buy", "Buy"], ["sell", "Sell"], ["lev", "Long / Short"]] as const).map(([k, label]) => (
+            <div className={`tabs${coin.main ? "" : " three"}`} role="tablist" aria-label="Order type">
+              {([["buy", "Buy"], ["sell", "Sell"], ["lev", "Long / Short"]] as const).filter(([k]) => !coin.main || k !== "lev").map(([k, label]) => (
                 <button key={k} type="button" role="tab" aria-selected={mode === k} className={`tab${mode === k ? " on" : ""}`} onClick={() => setMode(k)}>
                   {k === "lev" && <SplitCoin size={13} />}{label}
                 </button>
               ))}
             </div>
-            {mode === "lev"
+            {mode === "lev" && !coin.main
               ? LEVERAGE_ENABLED
                 ? <LeveragePanel coin={coin} lev={lev} onDone={refreshAll} initialLong={wantSide !== "short"} />
                 : <p className="note">Long / short isn&apos;t switched on for this site yet.</p>
-              : <SpotPanel coin={coin} side={mode} onDone={refreshAll} />}
+              : <SpotPanel coin={coin} side={mode === "sell" ? "sell" : "buy"} onDone={refreshAll} />}
           </section>
 
-          {LEVERAGE_ENABLED && <VaultCard coin={coin} lev={lev} />}
+          {LEVERAGE_ENABLED && !coin.main && <VaultCard coin={coin} lev={lev} />}
           {coin.description && (
             <section className="panel pad about">
               <h2>About</h2>

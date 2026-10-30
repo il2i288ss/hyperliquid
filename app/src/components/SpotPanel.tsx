@@ -42,8 +42,9 @@ export function SpotPanel({ coin, side, onDone }: { coin: Coin; side: "buy" | "s
     if (balance) setAmount(String(Math.floor((balance * parseInt(p)) / 100)));
   };
   const n = Number(amount);
-  const estTokens = buy && n > 0 ? (n * 0.9625) / coin.priceSol : 0;
-  const estSol = !buy && n > 0 ? n * coin.priceSol * 0.9625 : 0;
+  const keep = coin.main ? 0.9875 : 0.9625;
+  const estTokens = buy && n > 0 ? (n * keep) / coin.priceSol : 0;
+  const estSol = !buy && n > 0 ? n * coin.priceSol * keep : 0;
 
   async function trade() {
     if (!publicKey) return setVisible(true);
@@ -79,7 +80,7 @@ export function SpotPanel({ coin, side, onDone }: { coin: Coin; side: "buy" | "s
       </div>
       <div className="rows">
         <div><span>You get (est.)</span><span>{buy ? `${estTokens ? Math.floor(estTokens).toLocaleString() : "—"} $${coin.symbol}` : `${estSol ? estSol.toFixed(4) : "—"} SOL`}</span></div>
-        <div><span>Trade tax</span><span>3.75% (1% to holders)</span></div>
+        <div><span>Trade fee</span><span>{coin.main ? "1.25%" : "3.75% (1% to holders)"}</span></div>
         <div>
           <span><label htmlFor="slip">Max slippage %</label></span>
           <span><input id="slip" className="input" style={{ width: 70, minHeight: 32, padding: "4px 8px", fontSize: 12 }} inputMode="decimal" value={slippage} onChange={(e) => setSlippage(e.target.value)} /></span>

@@ -8,7 +8,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { unstable_cache } from "next/cache";
 import { DynamicBondingCurveClient } from "@meteora-ag/dynamic-bonding-curve-sdk";
 import bs58 from "bs58";
-import { DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_ENABLED, LEVERAGE_MODE, LEVERAGE_PROGRAM, LS_API, RPC_URL, TOTAL_SUPPLY } from "./config";
+import { DBC_CONFIG, MAIN_DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_ENABLED, LEVERAGE_MODE, LEVERAGE_PROGRAM, LS_API, RPC_URL, TOTAL_SUPPLY } from "./config";
 import { decodeGlobal, decodeMarket, globalPda } from "./leverage";
 import { decodePoolLive } from "./pool";
 
@@ -33,6 +33,8 @@ export type Coin = {
   startPriceSol: number;
   graduated: boolean;
   ageSeconds: number;
+  /** The platform's own coin (main config): fees to treasury, no long/short. */
+  main: boolean;
   /** Long/short is registered and enabled for this coin. */
   leverage: boolean;
   image: string;
@@ -146,8 +148,9 @@ let thresholdLamports = 0;
 async function scanCoins(): Promise<Coin[]> {
   const connection = new Connection(RPC_URL, "confirmed");
   const dbc = DynamicBondingCurveClient.create(connection, "confirmed");
-  const [pools, config, slot, usd, markets] = await Promise.all([
+  const [platformPools, mainPools, config, slot, usd, markets] = await Promise.all([
     dbc.state.getPoolsByConfig(DBC_CONFIG),
+    MAIN_DBC_CONFIG ? dbc.state.getPoolsByConfig(MAIN_DBC_CONFIG).catch(() => []) : Promise.resolve([]),
     dbc.state.getPoolConfig(DBC_CONFIG),
     connection.getSlot(),
     solUsd(connection),
@@ -172,6 +175,14 @@ async function scanCoins(): Promise<Coin[]> {
   thresholdLamports = threshold;
   const startPriceSol = config ? priceFromSqrt(config.sqrtStartPrice) : 0;
 
+  // The main config is public, so anyone could create a pool under it. Only
+  // show the official one: pools by allow-listed creators, or else the oldest.
+  const allow = (process.env.NEXT_PUBLIC_MAIN_CREATORS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const official = allow.length
+    ? mainPools.filter((p) => allow.includes((p.account.poolState.creator as PublicKey).toBase58()))
+    : [...mainPools].sort((a, b) => toNum(a.account.poolState.activationPoint) - toNum(b.account.poolState.activationPoint)).slice(0, 1);
+  const mainSet = new Set(official.map((p) => p.publicKey.toBase58()));
+  const pools = [...official, ...platformPools];
   const mints = pools.map((p) => p.account.poolState.baseMint as PublicKey);
   const metas: (ReturnType<typeof parseMetadata> | null)[] = [];
   for (let i = 0; i < mints.length; i += 100) {
@@ -207,13 +218,14 @@ async function scanCoins(): Promise<Coin[]> {
       startPriceSol,
       graduated: Boolean(s.isMigrated),
       ageSeconds: Math.max(0, (slot - toNum(s.activationPoint)) * SLOT_SECONDS),
-      leverage: enabled.has(mints[i].toBase58()),
+      main: mainSet.has(publicKey.toBase58()),
+      leverage: !mainSet.has(publicKey.toBase58()) && enabled.has(mints[i].toBase58()),
       image: offChain.get(meta?.uri ?? "")?.image ?? "",
       description: offChain.get(meta?.uri ?? "")?.description ?? "",
       links: offChain.get(meta?.uri ?? "")?.links ?? {},
     };
   });
-  coins.sort((a, b) => a.ageSeconds - b.ageSeconds);
+  coins.sort((a, b) => Number(b.main) - Number(a.main) || a.ageSeconds - b.ageSeconds);
   cache = { at: Date.now(), coins };
   return coins;
 }

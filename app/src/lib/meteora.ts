@@ -29,14 +29,17 @@ export async function buildLaunchTx(opts: {
   symbol: string;
   uri: string;
   firstBuySol: number;
+  /** Defaults to the platform config; pass the main-coin config for the platform's own coin. */
+  config?: PublicKey;
 }): Promise<{ tx: Transaction; mint: PublicKey }> {
   const { connection, creator, name, symbol, uri, firstBuySol } = opts;
+  const config = opts.config ?? CONFIG;
   const dbc = client(connection);
   const mint = Keypair.generate();
 
   const createPoolParam = {
     baseMint: mint.publicKey,
-    config: CONFIG,
+    config,
     name,
     symbol,
     uri,

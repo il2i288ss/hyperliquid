@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { buildLaunchTx } from "@/lib/meteora";
-import { LAUNCH_FEE_SOL, LAUNCH_RENT_SOL } from "@/lib/config";
+import { LAUNCH_FEE_SOL, LAUNCH_RENT_SOL, MAIN_DBC_CONFIG } from "@/lib/config";
 import { txError } from "@/lib/txError";
 
 type Status = "" | "uploading" | "signing" | "sending";
@@ -16,7 +16,17 @@ const LABEL: Record<Status, string> = {
   sending: "Launching…",
 };
 
-export default function LaunchPage() {
+export default function LaunchPageRoute() {
+  return (
+    <Suspense fallback={null}>
+      <LaunchPage />
+    </Suspense>
+  );
+}
+
+function LaunchPage() {
+  const isMain = useSearchParams().get("main") === "1" && Boolean(MAIN_DBC_CONFIG);
+  const launchFee = isMain ? 0 : LAUNCH_FEE_SOL;
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
   const { setVisible } = useWalletModal();
@@ -46,7 +56,7 @@ export default function LaunchPage() {
     if (!publicKey || !signTransaction) return setVisible(true);
     if (missing) return setError(missing);
     setError("");
-    const needed = (LAUNCH_FEE_SOL + buy + LAUNCH_RENT_SOL) * 1e9;
+    const needed = (launchFee + buy + LAUNCH_RENT_SOL) * 1e9;
     if ((await connection.getBalance(publicKey)) < needed) {
       return setError(txError(new Error("insufficient funds")));
     }
@@ -67,6 +77,7 @@ export default function LaunchPage() {
         symbol: form.symbol.trim().toUpperCase(),
         uri: meta.uri,
         firstBuySol: buy,
+        config: isMain ? MAIN_DBC_CONFIG! : undefined,
       });
       const signed = await signTransaction(tx);
 
@@ -85,8 +96,10 @@ export default function LaunchPage() {
   return (
     <main className="page launch-page">
       <header className="page-title">
-        <h1>Launch a coin</h1>
-        <p>It goes live in one transaction. Holders earn SOL from the first trade, and the coin gets its own long and short market once it has liquidity</p>
+        <h1>{isMain ? "Launch the main coin" : "Launch a coin"}</h1>
+        <p>{isMain
+          ? "The platform's own coin. All of its trading fees go to the treasury, there's no launch fee, and long / short is never opened on it"
+          : "It goes live in one transaction. Holders earn SOL from the first trade, and the coin gets its own long and short market once it has liquidity"}</p>
       </header>
       <div className="coin-grid">
         <section className="panel pad form-panel" aria-label="Coin details">
@@ -144,18 +157,19 @@ export default function LaunchPage() {
             </label>
             <p className="note">Your first buy lands in the launch transaction, so snipers can&apos;t get in ahead of you. It pays the normal fee, not the 90% sniper tax</p>
             <div className="rows">
-              <div><span>Launch fee</span><span>{LAUNCH_FEE_SOL} SOL</span></div>
+              <div><span>Launch fee</span><span>{launchFee} SOL</span></div>
               <div><span>First buy</span><span>{buy} SOL</span></div>
               <div><span>Network and rent</span><span>≈ {LAUNCH_RENT_SOL} SOL</span></div>
-              <div className="total"><span>Total</span><span>≈ {(LAUNCH_FEE_SOL + buy + LAUNCH_RENT_SOL).toFixed(3)} SOL</span></div>
+              <div className="total"><span>Total</span><span>≈ {(launchFee + buy + LAUNCH_RENT_SOL).toFixed(3)} SOL</span></div>
             </div>
             <button type="button" className="cta" disabled={!!status} onClick={launch}>
               {publicKey ? LABEL[status] : "Connect wallet"}
             </button>
             {error && <p className="msg-err" role="alert">{error}</p>}
             <p className="note">
-              Every trade pays 3%: 1% to holders in SOL every 15 minutes, 1.9% to the long and short vault, 0.1% to the platform.
-              Buys in the launch block pay a 90% anti-sniper tax
+              {isMain
+                ? "Every trade's fee goes to the treasury, collected automatically every 15 minutes. Buys in the launch block pay a 90% anti-sniper tax"
+                : "Every trade pays 3%: 1% to holders in SOL every 15 minutes, 1.9% to the long and short vault, 0.1% to the platform. Buys in the launch block pay a 90% anti-sniper tax"}
             </p>
           </section>
         </aside>

@@ -7,6 +7,16 @@ export const NETWORK = process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta" ? "mai
 export const DBC_CONFIG = new PublicKey(
   process.env.NEXT_PUBLIC_DBC_CONFIG ?? "2vXECqjW5vLPD4cvunQujy3jU5YfxrTEBmfJUNjFjYY9",
 );
+/**
+ * The platform's own "main coin" config: 100% of its trading fees go to the
+ * treasury, no launch fee, no holder rewards, and long/short never tracks it.
+ */
+export const MAIN_DBC_CONFIG: PublicKey | null =
+  process.env.NEXT_PUBLIC_MAIN_CONFIG
+    ? new PublicKey(process.env.NEXT_PUBLIC_MAIN_CONFIG)
+    : process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta"
+      ? new PublicKey("GpESQwWJgHsmWfk2sD28GzZt2xZLMeT2WKhBiqnBevCL")
+      : null;
 export const LEVERAGE_PROGRAM = new PublicKey(
   process.env.NEXT_PUBLIC_LEVERAGE_PROGRAM ?? "CVa7fiyDKgrE1EHxcgLPNJv69Yj5hLSfnfu1XhhhuR2x",
 );
