@@ -58,7 +58,8 @@ async function loadOffChain(uris: string[]) {
         let j: any = null;
         for (const u of urls) {
           try {
-            const r = await fetch(u, { signal: AbortSignal.timeout(4_000) });
+            // IPFS content never changes: keep it in Vercel's shared data cache.
+            const r = await fetch(u, { signal: AbortSignal.timeout(4_000), next: { revalidate: 31_536_000 } } as RequestInit);
             if (r.ok) { j = await r.json(); break; }
           } catch { /* next */ }
         }
