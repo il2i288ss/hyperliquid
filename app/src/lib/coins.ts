@@ -54,7 +54,7 @@ async function loadOffChain(uris: string[]) {
     todo.map(async (uri) => {
       try {
         const cid = uri.match(/\/ipfs\/([^/?#]+)/)?.[1];
-        const urls = cid ? [`https://ipfs.io/ipfs/${cid}`, `https://gateway.pinata.cloud/ipfs/${cid}`, `https://dweb.link/ipfs/${cid}`] : [ipfs(uri)];
+        const urls = cid ? [`https://gateway.pinata.cloud/ipfs/${cid}`, `https://ipfs.io/ipfs/${cid}`, `https://dweb.link/ipfs/${cid}`] : [ipfs(uri)];
         let j: any = null;
         for (const u of urls) {
           try {

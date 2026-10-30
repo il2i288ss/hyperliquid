@@ -7,9 +7,9 @@ import { NextResponse } from "next/server";
  * so this can't be used as an open proxy.
  */
 const GATEWAYS = [
+  (cid: string) => `https://gateway.pinata.cloud/ipfs/${cid}`,
   (cid: string) => `https://ipfs.io/ipfs/${cid}`,
   (cid: string) => `https://dweb.link/ipfs/${cid}`,
-  (cid: string) => `https://gateway.pinata.cloud/ipfs/${cid}`,
   (cid: string) => `https://w3s.link/ipfs/${cid}`,
 ];
 const CID = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{58,})$/;
