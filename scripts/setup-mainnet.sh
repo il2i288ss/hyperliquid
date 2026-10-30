@@ -18,14 +18,21 @@ echo "Installing…"
 npm install --silent --no-audit --no-fund >/dev/null
 
 echo
-read -r -s -p "Paste your Helius MAINNET RPC URL (input hidden), then Enter: " RPC
-echo
+read -r -p "Paste your Helius MAINNET RPC URL, then Enter: " RPC
+# Strip invisible characters some terminals add when pasting (e.g. ESC[201~).
+RPC="$(printf '%s' "$RPC" | sed -e 's/\x1b\[[0-9;]*~//g' | tr -cd '[:graph:]')"
+clear
 case "$RPC" in
   *devnet*) echo "That's a devnet URL. In Helius, switch to Mainnet and copy that one."; exit 1 ;;
   https://*) ;;
   *) echo "That doesn't look like an RPC URL."; exit 1 ;;
 esac
 export RPC_URL="$RPC"
+echo "Checking the RPC URL…"
+if ! npx tsx src/check-rpc.ts; then
+  echo "Helius rejected that URL. Copy the Mainnet RPC URL again and re-run this script."
+  exit 1
+fi
 
 DIR="$HOME/.mainnet-setup"; mkdir -p "$DIR"; chmod 700 "$DIR"
 for w in fee-bot payout-bot vault-reserve; do

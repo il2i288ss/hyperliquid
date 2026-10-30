@@ -6,7 +6,12 @@ const address = new PublicKey(process.argv[2]);
 const min = Number(process.argv[3]) * LAMPORTS_PER_SOL;
 
 for (;;) {
-  const bal = await connection.getBalance(address).catch(() => 0);
+  let bal = 0;
+  try {
+    bal = await connection.getBalance(address);
+  } catch (e) {
+    console.log(`\nRPC error: ${(e as Error).message.split("\n")[0]}`);
+  }
   if (bal >= min) {
     console.log(`received ${bal / LAMPORTS_PER_SOL} SOL`);
     break;
