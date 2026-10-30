@@ -27,8 +27,8 @@ test("tiers match the agreed table", () => {
   assert.equal(tierFor(T, 100_000).id, 1);
   assert.equal(tierFor(T, 2_000_000).id, 3);
   assert.equal(tierFor(T, 50_000_000).id, 5);
-  assert.equal(T[0].minPoolSol, sol(20));
-  assert.equal(T[0].minAgeSecs, 1800);
+  assert.equal(T[0].minPoolSol, 0n); // no wait on coins under $100K
+  assert.equal(T[0].minAgeSecs, 0);
 });
 
 test("sqrt price and market cap", () => {

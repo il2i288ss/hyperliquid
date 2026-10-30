@@ -36,7 +36,7 @@ export function tiers(test = false): Tier[] {
   const p = <T>(real: T, t: T) => (test ? t : real);
   const base = { minPoolSol: 0n, minAgeSecs: 0 };
   return [
-    { id: 0, minMcapUsd: 0, leverage: 2, maxMargin: sol(0.5), feeBps: 50n, oiCapBps: 500n, profitCapX: 3n, minHoldSecs: p(180, 20), twapSecs: p(180, 10), minPoolSol: p(sol(20), sol(0.5)), minAgeSecs: p(1800, 60) },
+    { id: 0, minMcapUsd: 0, leverage: 2, maxMargin: sol(0.5), feeBps: 50n, oiCapBps: 500n, profitCapX: 3n, minHoldSecs: p(180, 20), twapSecs: p(180, 10), minPoolSol: 0n, minAgeSecs: 0 },
     { id: 1, minMcapUsd: 100_000, leverage: 3, maxMargin: sol(4), feeBps: 50n, oiCapBps: 500n, profitCapX: 5n, minHoldSecs: p(60, 20), twapSecs: p(60, 10), ...base },
     { id: 2, minMcapUsd: 500_000, leverage: 5, maxMargin: sol(5), feeBps: 50n, oiCapBps: 500n, profitCapX: 5n, minHoldSecs: p(60, 20), twapSecs: p(60, 10), ...base },
     { id: 3, minMcapUsd: 1_000_000, leverage: 10, maxMargin: sol(5), feeBps: 30n, oiCapBps: 400n, profitCapX: 5n, minHoldSecs: p(60, 20), twapSecs: p(60, 10), ...base },

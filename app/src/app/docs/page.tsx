@@ -176,8 +176,8 @@ export default function Docs() {
           </table>
         </div>
         <p>
-          Coins under $100K unlock long/short once they&apos;re at least <b>30 minutes old</b> and have <b>20 SOL</b> of liquidity
-          {devnet && " (on the test site: 1 minute and 0.5 SOL)"}.
+          Coins under $100K can be longed or shorted as soon as their price is being tracked, with no waiting period. Their
+          positions are kept small: each side is capped at 5% of the coin&apos;s pool liquidity.
         </p>
 
         <h2 id="pnl">Profit, loss & liquidation</h2>
@@ -220,7 +220,7 @@ export default function Docs() {
         <h3>Why did my buy pay 90%?</h3>
         <p>It landed in the same block as the launch, which is reserved to punish snipers. Wait a second and buy again.</p>
         <h3>Why can&apos;t I open a long/short on a coin?</h3>
-        <p>It&apos;s too new or too small (under $100K it needs 30 minutes and 20 SOL liquidity), it graduated, or the coin&apos;s position limit is full. The panel shows the reason.</p>
+        <p>It doesn&apos;t have enough liquidity yet for its price to be tracked, it graduated, or the coin&apos;s position limit is full. The panel shows the reason.</p>
         <h3>Can a short win dump the coin?</h3>
         <p>No. Shorts never sell the coin. Winnings come from the vault in SOL.</p>
         <h3>Transaction failed with &quot;no record of a prior credit&quot;?</h3>

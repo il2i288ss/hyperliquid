@@ -12,8 +12,8 @@ import type { Coin } from "@/lib/coins";
 import type { LeverageState } from "@/lib/useLeverage";
 import { SplitCoin } from "./SplitCoin";
 
-const DEGEN_MIN_POOL = { real: 20, test: 0.5 };
-const DEGEN_MIN_AGE = { real: 1800, test: 60 };
+const DEGEN_MIN_POOL = { real: 0, test: 0 };
+const DEGEN_MIN_AGE = { real: 0, test: 0 };
 
 export function LeveragePanel({ coin, lev, onDone, initialLong = true }: { coin: Coin; lev: LeverageState; onDone: () => void; initialLong?: boolean }) {
   const { connection } = useConnection();
