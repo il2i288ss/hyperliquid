@@ -1,0 +1,14 @@
+wallet 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr
+balance 0.093067926 SOL
+faucet refused (attempt 1): 410 Gone:  {"jsonrpc":"2.0","error":{"code": 410, "message":"The RPC faucet is closed on this cluster. Request test SOL at https://faucet.solana.com"}, "id": "adc05ece-d7bf-451f-a7fb-e436b99477e8" } 
+balance 0.093067926 SOL
+faucet refused (attempt 2): 410 Gone:  {"jsonrpc":"2.0","error":{"code": 410, "message":"The RPC faucet is closed on this cluster. Request test SOL at https://faucet.solana.com"}, "id": "6704b773-2a79-4d7d-b355-58d2329f2434" } 
+balance 0.093067926 SOL
+faucet refused (attempt 3): 410 Gone:  {"jsonrpc":"2.0","error":{"code": 410, "message":"The RPC faucet is closed on this cluster. Request test SOL at https://faucet.solana.com"}, "id": "178b8939-3d03-4288-88e3-fc9b978781e8" } 
+balance 0.093067926 SOL
+faucet refused (attempt 4): 410 Gone:  {"jsonrpc":"2.0","error":{"code": 410, "message":"The RPC faucet is closed on this cluster. Request test SOL at https://faucet.solana.com"}, "id": "5eb3f2c3-7761-4d15-8963-a3ae6c4497d1" } 
+balance 0.093067926 SOL
+faucet refused (attempt 5): 410 Gone:  {"jsonrpc":"2.0","error":{"code": 410, "message":"The RPC faucet is closed on this cluster. Request test SOL at https://faucet.solana.com"}, "id": "abe52c00-ac6f-4b15-a141-c910c2679f0d" } 
+balance 0.093067926 SOL
+faucet refused (attempt 6): 410 Gone:  {"jsonrpc":"2.0","error":{"code": 410, "message":"The RPC faucet is closed on this cluster. Request test SOL at https://faucet.solana.com"}, "id": "cc681cfe-a845-4934-a986-95288cac3f1f" } 
+Not enough devnet SOL. Send some to 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr from https://faucet.solana.com and re-run.
