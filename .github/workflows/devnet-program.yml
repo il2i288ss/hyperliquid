@@ -1,0 +1,71 @@
+name: Devnet long/short
+
+# Builds the long/short program, deploys (or upgrades) it on devnet with the
+# DEVNET_KEYPAIR wallet, then runs the long/short test against a real
+# Meteora coin. The devnet program-id keypair lives on the `devnet-state`
+# branch (devnet only; mainnet uses a separate, offline key).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: devnet
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ vars.DEVNET_RPC_URL || 'https://api.devnet.solana.com' }}
+      ADMIN_KEYPAIR: ${{ github.workspace }}/devnet.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+      - name: Wallet + state
+        env:
+          DEVNET_KEYPAIR: ${{ secrets.DEVNET_KEYPAIR }}
+        run: |
+          printf '%s' "$DEVNET_KEYPAIR" > devnet.json && chmod 600 devnet.json
+          solana config set --url "$RPC_URL" --keypair devnet.json
+          echo "wallet $(solana address)  balance $(solana balance)"
+          git clone -q --depth 1 -b devnet-state "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/state \
+            || (mkdir -p /tmp/state && git -C /tmp/state init -q -b devnet-state)
+          if [ ! -f /tmp/state/program-keypair.json ]; then
+            solana-keygen new --no-bip39-passphrase -s -o /tmp/state/program-keypair.json
+          fi
+          PID=$(solana-keygen pubkey /tmp/state/program-keypair.json)
+          echo "PROGRAM_ID=$PID" >> "$GITHUB_ENV"
+          echo "program $PID"
+      - name: Build for Solana
+        run: |
+          sed -i "s/declare_id!(\"[A-Za-z0-9]*\")/declare_id!(\"$PROGRAM_ID\")/" programs/leverage/src/lib.rs
+          grep -n "declare_id" programs/leverage/src/lib.rs
+          cargo build-sbf --manifest-path programs/leverage/Cargo.toml
+      - name: Deploy / upgrade
+        run: |
+          solana program deploy target/deploy/leverage.so \
+            --program-id /tmp/state/program-keypair.json --max-sign-attempts 60
+          solana program show "$PROGRAM_ID"
+          echo "balance after deploy $(solana balance)"
+      - name: Long/short test
+        working-directory: scripts
+        env:
+          LEVERAGE_PROGRAM_ID: ${{ env.PROGRAM_ID }}
+        run: |
+          npm install --no-audit --no-fund
+          npm run smoke:leverage
+      - name: Publish results
+        if: always()
+        run: |
+          cp scripts/leverage-result.json /tmp/state/ 2>/dev/null || true
+          echo "$PROGRAM_ID" > /tmp/state/leverage-program-id.txt
+          cd /tmp/state
+          git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
+          git add -A && git commit -q -m "devnet long/short ${GITHUB_SHA}" || true
+          git push "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" HEAD:devnet-state

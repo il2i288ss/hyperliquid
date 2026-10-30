@@ -40,11 +40,11 @@ jobs:
       - name: Publish results
         if: always()
         run: |
-          mkdir -p /tmp/state
+          git clone -q --depth 1 -b devnet-state "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/state \
+            || (mkdir -p /tmp/state && git -C /tmp/state init -q -b devnet-state)
           cp smoke-result.json /tmp/state/ 2>/dev/null || echo '{"error":"no result"}' > /tmp/state/smoke-result.json
           cp rewards-result.json /tmp/state/ 2>/dev/null || echo '{"error":"no result"}' > /tmp/state/rewards-result.json
           cd /tmp/state
-          git init -q -b devnet-state
           git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
-          git add -A && git commit -q -m "devnet smoke ${GITHUB_SHA}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" devnet-state
+          git add -A && git commit -q -m "devnet smoke ${GITHUB_SHA}" || true
+          git push "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" HEAD:devnet-state

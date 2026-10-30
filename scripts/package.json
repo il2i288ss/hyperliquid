@@ -13,7 +13,8 @@
     "snapshot": "tsx src/rewards/snapshot.ts",
     "airdrop": "tsx src/rewards/airdrop.ts",
     "smoke": "tsx src/devnet-smoke.ts",
-    "smoke:rewards": "tsx src/devnet-rewards-smoke.ts"
+    "smoke:rewards": "tsx src/devnet-rewards-smoke.ts",
+    "smoke:leverage": "tsx src/devnet-leverage-smoke.ts"
   },
   "dependencies": {
     "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.8",

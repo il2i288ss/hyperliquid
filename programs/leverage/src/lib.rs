@@ -18,7 +18,11 @@ use math::*;
 
 declare_id!("11111111111111111111111111111111"); // replace after `anchor keys sync`
 
-const OBS: usize = 16;
+/// Price history: one observation at most every OBS_INTERVAL seconds,
+/// OBS slots -> ~256 s of history, enough for the 180 s degen-tier TWAP.
+/// The interval stops anyone flooding the history to block trading.
+const OBS: usize = 32;
+const OBS_INTERVAL: i64 = 8;
 
 #[program]
 pub mod leverage {
@@ -83,10 +87,14 @@ pub mod leverage {
         }
         let (price, pool_sol) = read_pool(m.pool_kind, &ctx.accounts.pool.try_borrow_data()?)?;
         let now = Clock::get()?.unix_timestamp;
+        m.pool_sol = pool_sol;
+        let last = m.obs[(m.obs_idx as usize + OBS - 1) % OBS].ts;
+        if now - last < OBS_INTERVAL {
+            return Ok(()); // too soon: keep history evenly spaced
+        }
         let i = m.obs_idx as usize % OBS;
         m.obs[i] = Obs { ts: now, price };
-        m.obs_idx = m.obs_idx.wrapping_add(1);
-        m.pool_sol = pool_sol;
+        m.obs_idx = ((m.obs_idx as usize + 1) % OBS) as u16;
         Ok(())
     }
 
@@ -291,7 +299,7 @@ pub struct Market {
     pub pool_sol: u64,
     pub oi_long: u64,
     pub oi_short: u64,
-    pub obs: [Obs; 16], // = OBS (literal for InitSpace)
+    pub obs: [Obs; 32], // = OBS (literal for InitSpace)
     pub obs_idx: u16,
     pub bump: u8,
 }
