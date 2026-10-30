@@ -6,6 +6,9 @@ import { CoinAvatar } from "@/components/CoinAvatar";
 import { SpotPanel } from "@/components/SpotPanel";
 import { LeveragePanel } from "@/components/LeveragePanel";
 import { PositionsTable } from "@/components/PositionsTable";
+import { PriceChart } from "@/components/PriceChart";
+import { HoldersTable, TradesTable } from "@/components/ActivityTables";
+import type { Holder, Trade } from "@/lib/activity";
 import { useLeverage } from "@/lib/useLeverage";
 import { LEVERAGE_ENABLED, explorer } from "@/lib/config";
 import { age, price, short, usd } from "@/lib/format";
@@ -21,6 +24,8 @@ export default function CoinPage() {
   const [mode, setMode] = useState<Mode>("buy");
   const [tab, setTab] = useState<"positions" | "trades" | "holders">(LEVERAGE_ENABLED ? "positions" : "trades");
   const lev = useLeverage(mint);
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [holders, setHolders] = useState<Holder[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -34,14 +39,28 @@ export default function CoinPage() {
     }
   }, [mint]);
 
+  const loadActivity = useCallback(async () => {
+    const [t, h] = await Promise.all([
+      fetch(`/api/coins/${mint}/trades`).then((r) => (r.ok ? r.json() : { trades: [] })),
+      fetch(`/api/coins/${mint}/holders`).then((r) => (r.ok ? r.json() : { holders: [] })),
+    ]);
+    setTrades(t.trades ?? []);
+    setHolders(h.holders ?? []);
+  }, [mint]);
+
   useEffect(() => {
     load();
-    const t = setInterval(load, 10_000);
+    loadActivity().catch(() => {});
+    const t = setInterval(() => {
+      load();
+      loadActivity().catch(() => {});
+    }, 8_000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, loadActivity]);
 
   const refreshAll = () => {
     load();
+    loadActivity().catch(() => {});
     lev.refresh().catch(() => {});
   };
 
@@ -82,11 +101,7 @@ export default function CoinPage() {
       <main className="page">
         <div className="split">
           <div className="main">
-            <section className="panel" aria-label="Price chart">
-              <div className="empty" style={{ minHeight: 340, display: "grid", placeItems: "center" }}>
-                Live chart and trade history arrive with the indexer (next step).
-              </div>
-            </section>
+            <PriceChart trades={trades} solUsd={solUsd} />
 
             <section className="panel">
               <div className="subtabs" role="tablist" aria-label="Activity">
@@ -96,8 +111,10 @@ export default function CoinPage() {
               </div>
               {tab === "positions" ? (
                 <PositionsTable coin={coin} positions={lev.positions} solUsd={solUsd} testBuild={lev.global?.testBuild ?? false} onDone={refreshAll} />
+              ) : tab === "trades" ? (
+                <TradesTable trades={trades} solUsd={solUsd} symbol={coin.symbol} />
               ) : (
-                <p className="empty">{tab === "trades" ? "Live trades" : "Top holders"} arrive with the indexer (next step).</p>
+                <HoldersTable holders={holders} />
               )}
             </section>
           </div>

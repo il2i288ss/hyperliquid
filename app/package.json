@@ -20,7 +20,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "bs58": "^6.0.0",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "lightweight-charts": "^4.2.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",
