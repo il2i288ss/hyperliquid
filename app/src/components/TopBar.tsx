@@ -13,19 +13,6 @@ const WalletButton = dynamic(
   { ssr: false },
 );
 
-/** Obverse mark: one coin, two sides. */
-export function Logo({ size = 24 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 2 A10 10 0 0 0 12 22 Z" fill="#FAFAFA" />
-      <path d="M12 2 A10 10 0 0 1 12 22 Z" fill="#525252" />
-      <circle cx="12" cy="12" r="10" fill="none" stroke="#000" strokeWidth="1.2" />
-      <circle cx="12" cy="12" r="6.2" fill="none" stroke="#000" strokeWidth="1.4" opacity=".35" />
-      <path d="M12 2 V22" stroke="#000" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
 export function TopBar() {
   const path = usePathname();
   const router = useRouter();
@@ -46,7 +33,7 @@ export function TopBar() {
 
   return (
     <header className="topbar">
-      <Link href="/" className="brand"><Logo /><span>{BRAND}</span></Link>
+      <Link href="/" className="brand" aria-label={`${BRAND} home`}><img src="/brand/wordmark.png" alt={BRAND} height={22} style={{ height: 22, width: "auto", display: "block" }} /></Link>
       <nav className="nav" aria-label="Main">
         {nav.map((n) => (
           <Link key={n.href} href={n.href} className={path === n.href ? "on" : ""}><Icon name={n.icon as IconName} size={15} />{n.label}</Link>
