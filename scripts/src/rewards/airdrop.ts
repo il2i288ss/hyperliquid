@@ -19,13 +19,12 @@ import { read, write, type Ledger } from "./store.js";
 
 const MIN_PAYOUT = 1_000_000n; // 0.001 SOL; smaller amounts carry over
 const PER_TX = 18; // transfers per transaction
-const dry = process.argv.includes("--dry");
 
 type Snap = { ts: number; balances: Record<string, string> };
 const toMap = (r: Record<string, string>): Balances =>
   new Map(Object.entries(r).map(([k, v]) => [k, BigInt(v)]));
 
-async function main() {
+export async function payHolders(dry = process.argv.includes("--dry")) {
   const pot = loadKeypair("HOLDER_POT_KEYPAIR");
   const ledger = read<Ledger>("ledger.json", {});
 
@@ -73,7 +72,9 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith("airdrop.ts")) {
+  payHolders().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

@@ -15,13 +15,15 @@ import { SPLIT_BPS } from "./platform.js";
 import { addHoldersDue, addLaunchFees } from "./rewards/store.js";
 
 const U64_MAX = new BN("18446744073709551615");
-const isMain = process.argv.includes("--main");
 
-async function main() {
+export async function claimFees(isMain = process.argv.includes("--main")) {
   const claimer = loadKeypair(isMain ? "TEAM_KEYPAIR" : "FEE_SPLITTER_KEYPAIR");
   const receiver = isMain ? pubkey("TEAM_WALLET") : pubkey("FEE_SPLITTER_WALLET");
-  const deployments = JSON.parse(fs.readFileSync("deployments.json", "utf8"));
-  const config = new PublicKey(isMain ? deployments.mainCoinConfig : deployments.platformConfig);
+  const fromEnv = isMain ? process.env.MAIN_COIN_CONFIG : process.env.PLATFORM_CONFIG;
+  const deployments = fs.existsSync("deployments.json") ? JSON.parse(fs.readFileSync("deployments.json", "utf8")) : {};
+  const address = fromEnv ?? (isMain ? deployments.mainCoinConfig : deployments.platformConfig);
+  if (!address) throw new Error(`Set ${isMain ? "MAIN_COIN_CONFIG" : "PLATFORM_CONFIG"} (or run npm run config first)`);
+  const config = new PublicKey(address);
 
   const pools = await dbc.state.getPoolsByConfig(config);
   console.log(`Found ${pools.length} pools under ${config.toBase58()}`);
@@ -71,7 +73,9 @@ async function main() {
   // Claim those with the DAMM v2 SDK (cp-amm-sdk: claimPositionFee) — see README.
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith("claim-fees.ts")) {
+  claimFees().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

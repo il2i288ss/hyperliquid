@@ -1,0 +1,50 @@
+name: Devnet keeper test
+
+# Keeps a stable devnet platform (config saved on the devnet-state branch),
+# launches a demo coin, runs the keeper for ~100 s, then checks it registered
+# the coin for long/short and recorded its prices.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: devnet
+
+jobs:
+  keeper:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: scripts } }
+    env:
+      RPC_URL: ${{ vars.DEVNET_RPC_URL || 'https://api.devnet.solana.com' }}
+      ADMIN_KEYPAIR: ${{ github.workspace }}/devnet.json
+      KEEPER_KEYPAIR: ${{ github.workspace }}/devnet.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - name: Devnet wallet and state
+        env:
+          DEVNET_KEYPAIR: ${{ secrets.DEVNET_KEYPAIR }}
+        run: |
+          printf '%s' "$DEVNET_KEYPAIR" > "$ADMIN_KEYPAIR"; chmod 600 "$ADMIN_KEYPAIR"
+          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.6
+          git clone -q --depth 1 -b devnet-state "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/state
+          git clone -q --depth 1 -b devnet-program "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/program || true
+          ID="$(cat /tmp/program/program-id.txt 2>/dev/null || cat /tmp/state/leverage-program-id.txt)"
+          echo "LEVERAGE_PROGRAM_ID=$ID" >> "$GITHUB_ENV"
+      - name: Platform config + demo coin
+        run: npx tsx src/devnet-platform.ts /tmp/state 0.3
+      - name: Run keeper for 100 s
+        run: timeout 100 npm run keeper || [ $? -eq 124 ]
+      - name: Check keeper results
+        run: npx tsx src/devnet-keeper-check.ts
+      - name: Publish state
+        if: always()
+        run: |
+          cp keeper-result.json /tmp/state/ 2>/dev/null || true
+          cd /tmp/state
+          git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
+          git add -A && git commit -q -m "devnet keeper ${GITHUB_SHA}" || true
+          git push "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" HEAD:devnet-state

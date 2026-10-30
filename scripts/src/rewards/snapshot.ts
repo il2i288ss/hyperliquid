@@ -39,7 +39,7 @@ export async function holderBalances(
   return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.toString()]));
 }
 
-async function main() {
+export async function snapshotAll() {
   const ledger = read<Ledger>("ledger.json", {});
   const mints = Object.keys(ledger).filter((m) => BigInt(ledger[m].holdersDue) > 0n);
   for (const mint of mints) {
@@ -52,7 +52,7 @@ async function main() {
 }
 
 if (process.argv[1]?.endsWith("snapshot.ts")) {
-  main().catch((e) => {
+  snapshotAll().catch((e) => {
     console.error(e);
     process.exit(1);
   });

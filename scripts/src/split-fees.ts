@@ -21,7 +21,7 @@ import { consumeLaunchFees, peekLaunchFees } from "./rewards/store.js";
 
 const KEEP_FOR_TX_FEES = 10_000_000n; // keep 0.01 SOL for claim tx fees
 
-async function main() {
+export async function splitFees() {
   const splitter = loadKeypair("FEE_SPLITTER_KEYPAIR");
   const balance = BigInt(await connection.getBalance(splitter.publicKey));
   const available = balance - KEEP_FOR_TX_FEES;
@@ -52,7 +52,9 @@ async function main() {
   );
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith("split-fees.ts")) {
+  splitFees().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
