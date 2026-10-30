@@ -44,7 +44,7 @@ export default function Docs() {
           <div className="card"><span className="ic"><Icon name="rocket" /></span><span className="big">{LAUNCH_FEE_SOL} SOL</span><span>to launch a coin</span></div>
           <div className="card"><span className="ic"><Icon name="coins" /></span><span className="big">1%</span><span>of every trade paid to holders in SOL, every 15 min</span></div>
           <div className="card"><span className="ic"><Icon name="shield" /></span><span className="big">90%</span><span>fee on snipers in the launch block</span></div>
-          <div className="card"><span className="ic"><Icon name="layers" /></span><span className="big">up to 10x</span><span>long or short, paid from an on-chain vault</span></div>
+          <div className="card"><span className="ic"><Icon name="layers" /></span><span className="big">up to 10x</span><span>long or short any coin, wins paid in SOL from the vault</span></div>
         </div>
         {devnet && (
           <div className="callout warn">
@@ -55,7 +55,7 @@ export default function Docs() {
 
         <h2 id="wallet">Connect a wallet</h2>
         <p>
-          Click <b>Select Wallet</b> in the top right. Phantom, Solflare, Backpack, MetaMask (Solana) and other Solana wallets work. Your wallet
+          Click <b>Connect wallet</b> in the top right. Phantom, Solflare, Backpack, MetaMask (Solana) and other Solana wallets work. Your wallet
           only signs transactions you approve; the site never holds your funds or keys.
         </p>
 
@@ -72,6 +72,13 @@ export default function Docs() {
           Open any coin and use the <b>Buy / Sell</b> panel. Trades go straight through the coin&apos;s Meteora pool on-chain. Set
           slippage if the price is moving fast. Everyone trades at the same price on the same curve; there&apos;s no order book and
           no hidden insiders.
+        </p>
+        <h3>The chart</h3>
+        <p>
+          Candles are built from every trade the coin&apos;s pool has ever made, using the exact pool price Meteora records with each
+          swap on-chain. The newest candle follows the pool live: the page listens to the pool account and updates the moment the
+          price changes, then adds the trade to the list within a second or two. Switch between market cap and price, and pick a
+          timeframe from 1 second to 1 hour.
         </p>
 
         <h2 id="fees">Fees</h2>
@@ -103,7 +110,7 @@ export default function Docs() {
         </p>
         <p>
           When the market cap reaches about <b>400 SOL</b>, the coin <b>graduates</b>: its liquidity moves into a regular Meteora
-          pool and is <b>locked forever</b>, so it can never be pulled. The progress bar on Discover shows how close each coin is.
+          pool and is <b>locked forever</b>, so it can never be pulled. The progress bar on each coin&apos;s page shows how close it is.
         </p>
 
         <h2 id="rewards">Holder rewards</h2>
@@ -139,6 +146,7 @@ export default function Docs() {
             you win, you&apos;re paid in SOL from the vault. A big winning short never dumps the coin on holders, and a long never
             needs to be sold into the pool.
           </li>
+          <li><b>Take profit and stop loss</b> are set as market caps (for example, take profit at $250K, stop loss at $80K). They&apos;re checked every few seconds and close the position for you.</li>
           <li>The price used is the coin&apos;s real pool price, averaged over the last minute (three minutes for coins under $100K), so a quick pump or dump can&apos;t be used to game an entry or exit.</li>
         </ul>
         <div className="flow">

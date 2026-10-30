@@ -81,12 +81,16 @@ export default function LaunchPage() {
     }
   }
 
+  const sym = form.symbol.trim().toUpperCase() || "TICKER";
   return (
-    <main className="page">
-      <div className="split">
-        <section className="main panel pad" style={{ gap: 14 }}>
-          <h2>Launch a coin</h2>
-          <div className="split" style={{ gap: 12 }}>
+    <main className="page launch-page">
+      <header className="page-title">
+        <h1>Launch a coin</h1>
+        <p>It goes live in one transaction. Holders earn SOL from the first trade, and the coin gets its own long and short market once it has liquidity</p>
+      </header>
+      <div className="coin-grid">
+        <section className="panel pad form-panel" aria-label="Coin details">
+          <div className="form-row">
             <label className="field" style={{ flex: "2 1 240px" }}>
               <span>Name</span>
               <input className="input text" maxLength={32} value={form.name} onChange={set("name")} placeholder="Moon Cat" />
@@ -98,48 +102,60 @@ export default function LaunchPage() {
           </div>
           <label className="field">
             <span>Description</span>
-            <textarea className="input text" maxLength={500} value={form.description} onChange={set("description")} />
+            <textarea className="input text" maxLength={500} value={form.description} onChange={set("description")} placeholder="What is this coin about" />
           </label>
           <div className="field">
-            <span>Image (max 2 MB)</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {preview && <img src={preview} alt="Token image preview" width={64} height={64} style={{ borderRadius: 10, objectFit: "cover" }} />}
-              <label className="btn" style={{ cursor: "pointer" }}>
-                {image ? "Change image" : "Choose image"}
-                <input type="file" accept="image/*" className="sr" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
-              </label>
-              {image && <span className="muted">{image.name}</span>}
-            </div>
+            <span>Image <span className="muted">· up to 2 MB</span></span>
+            <label className="drop">
+              {preview ? <img src={preview} alt="Token image preview" width={64} height={64} /> : <span className="drop-empty" aria-hidden="true">+</span>}
+              <span className="drop-text">
+                <b>{image ? "Change image" : "Choose an image"}</b>
+                <span className="muted">{image ? image.name : "PNG, JPG, GIF or WebP. Square looks best"}</span>
+              </span>
+              <input type="file" accept="image/*" className="sr" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
+            </label>
           </div>
-          <div className="split" style={{ gap: 12 }}>
-            <label className="field" style={{ flex: "1 1 180px" }}><span>Website</span><input className="input text" value={form.website} onChange={set("website")} placeholder="https://" /></label>
-            <label className="field" style={{ flex: "1 1 180px" }}><span>X / Twitter</span><input className="input text" value={form.twitter} onChange={set("twitter")} placeholder="https://x.com/" /></label>
-            <label className="field" style={{ flex: "1 1 180px" }}><span>Telegram</span><input className="input text" value={form.telegram} onChange={set("telegram")} placeholder="https://t.me/" /></label>
-            <label className="field" style={{ flex: "1 1 180px" }}><span>YouTube</span><input className="input text" value={form.youtube} onChange={set("youtube")} placeholder="https://youtube.com/" /></label>
+          <div className="field">
+            <span>Links <span className="muted">· optional</span></span>
+            <div className="form-grid">
+              <label className="field"><span className="sr">Website</span><input className="input text" value={form.website} onChange={set("website")} placeholder="Website  https://" /></label>
+              <label className="field"><span className="sr">X</span><input className="input text" value={form.twitter} onChange={set("twitter")} placeholder="X  https://x.com/" /></label>
+              <label className="field"><span className="sr">Telegram</span><input className="input text" value={form.telegram} onChange={set("telegram")} placeholder="Telegram  https://t.me/" /></label>
+              <label className="field"><span className="sr">YouTube</span><input className="input text" value={form.youtube} onChange={set("youtube")} placeholder="YouTube  https://youtube.com/" /></label>
+            </div>
           </div>
         </section>
 
-        <aside className="side">
-          <section className="panel pad" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <h2>Launch</h2>
+        <aside className="coin-side">
+          <section className="panel pad launch-box" aria-label="Launch">
+            <div className="preview-row" aria-label="Preview">
+              <div className="avatar" style={{ width: 48, height: 48 }}>{preview ? <img src={preview} alt="" /> : <span className="avatar-letter">{(form.name[0] ?? "?").toUpperCase()}</span>}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                <span style={{ fontWeight: 500, fontSize: 15 }}>{form.name.trim() || "Your coin"} <span className="muted" style={{ fontWeight: 400 }}>{sym}</span></span>
+                <span className="mono muted" style={{ fontSize: 12 }}>Starts at MC ≈ 30 SOL</span>
+              </div>
+            </div>
             <label className="field">
-              <span>Your first buy (SOL, optional)</span>
-              <input className="input" inputMode="decimal" value={firstBuy} onChange={(e) => setFirstBuy(e.target.value)} />
+              <span>Your first buy <span className="muted">· optional</span></span>
+              <div className="input-unit">
+                <input className="input" inputMode="decimal" value={firstBuy} onChange={(e) => setFirstBuy(e.target.value)} />
+                <span>SOL</span>
+              </div>
             </label>
-            <p className="note">Your first buy lands in the launch transaction, so snipers can&apos;t get in ahead of you. It pays the normal 3.75% fee, not the 90% sniper tax.</p>
+            <p className="note">Your first buy lands in the launch transaction, so snipers can&apos;t get in ahead of you. It pays the normal fee, not the 90% sniper tax</p>
             <div className="rows">
               <div><span>Launch fee</span><span>{LAUNCH_FEE_SOL} SOL</span></div>
               <div><span>First buy</span><span>{buy} SOL</span></div>
-              <div><span>Network + rent (approx.)</span><span>~{LAUNCH_RENT_SOL} SOL</span></div>
-              <div><span>Total</span><span>~{(LAUNCH_FEE_SOL + buy + LAUNCH_RENT_SOL).toFixed(3)} SOL</span></div>
+              <div><span>Network and rent</span><span>≈ {LAUNCH_RENT_SOL} SOL</span></div>
+              <div className="total"><span>Total</span><span>≈ {(LAUNCH_FEE_SOL + buy + LAUNCH_RENT_SOL).toFixed(3)} SOL</span></div>
             </div>
             <button type="button" className="cta" disabled={!!status} onClick={launch}>
               {publicKey ? LABEL[status] : "Connect wallet"}
             </button>
             {error && <p className="msg-err" role="alert">{error}</p>}
             <p className="note">
-              Every trade pays 3%: 1% to holders in SOL, 1.9% to the long/short vault, 0.1% to the platform.
-              Buys in the launch block pay a <span className="warn">90% anti-sniper tax</span>.
+              Every trade pays 3%: 1% to holders in SOL every 15 minutes, 1.9% to the long and short vault, 0.1% to the platform.
+              Buys in the launch block pay a 90% anti-sniper tax
             </p>
           </section>
         </aside>

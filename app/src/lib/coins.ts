@@ -9,6 +9,7 @@ import { DynamicBondingCurveClient } from "@meteora-ag/dynamic-bonding-curve-sdk
 import bs58 from "bs58";
 import { DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_ENABLED, LEVERAGE_MODE, LEVERAGE_PROGRAM, LS_API, RPC_URL, TOTAL_SUPPLY } from "./config";
 import { decodeGlobal, decodeMarket, globalPda } from "./leverage";
+import { decodePoolLive } from "./pool";
 
 const MARKET_DISC = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154]);
 
@@ -27,6 +28,8 @@ export type Coin = {
   mcapUsd: number;
   quoteReserveSol: number;
   curveProgress: number; // 0..1
+  /** Price every coin starts at on the curve (SOL per token). */
+  startPriceSol: number;
   graduated: boolean;
   ageSeconds: number;
   /** Long/short is registered and enabled for this coin. */
@@ -137,6 +140,7 @@ export async function solUsd(connection: Connection) {
 }
 
 let cache: { at: number; coins: Coin[] } | null = null;
+let thresholdLamports = 0;
 
 export async function listCoins(): Promise<Coin[]> {
   if (cache && Date.now() - cache.at < 10_000) return cache.coins;
@@ -165,6 +169,8 @@ export async function listCoins(): Promise<Coin[]> {
     }
   }
   const threshold = config ? toNum(config.migrationQuoteThreshold) : 0;
+  thresholdLamports = threshold;
+  const startPriceSol = config ? priceFromSqrt(config.sqrtStartPrice) : 0;
 
   const mints = pools.map((p) => p.account.poolState.baseMint as PublicKey);
   const metas: (ReturnType<typeof parseMetadata> | null)[] = [];
@@ -198,6 +204,7 @@ export async function listCoins(): Promise<Coin[]> {
       mcapUsd: priceSol * TOTAL_SUPPLY * usd,
       quoteReserveSol: quote / 1e9,
       curveProgress: threshold ? Math.min(quote / threshold, 1) : 0,
+      startPriceSol,
       graduated: Boolean(s.isMigrated),
       ageSeconds: Math.max(0, (slot - toNum(s.activationPoint)) * SLOT_SECONDS),
       leverage: enabled.has(mints[i].toBase58()),
@@ -213,4 +220,27 @@ export async function listCoins(): Promise<Coin[]> {
 
 export async function getCoin(mint: string) {
   return (await listCoins()).find((c) => c.mint === mint) ?? null;
+}
+
+/** One coin with its price read from the chain right now (metadata from the 10 s list cache). */
+export async function getCoinLive(mint: string) {
+  const coin = await getCoin(mint);
+  if (!coin) return null;
+  try {
+    const info = await new Connection(RPC_URL, "confirmed").getAccountInfo(new PublicKey(coin.pool), "confirmed");
+    if (!info) return coin;
+    const { priceSol, quoteSol } = decodePoolLive(info.data);
+    if (!(priceSol > 0)) return coin;
+    const usd = coin.priceSol > 0 ? coin.priceUsd / coin.priceSol : 0;
+    return {
+      ...coin,
+      priceSol,
+      priceUsd: priceSol * usd,
+      mcapUsd: priceSol * TOTAL_SUPPLY * usd,
+      quoteReserveSol: quoteSol,
+      curveProgress: thresholdLamports ? Math.min(1, (quoteSol * 1e9) / thresholdLamports) : coin.curveProgress,
+    };
+  } catch {
+    return coin;
+  }
 }
