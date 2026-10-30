@@ -1,10 +1,103 @@
 {
   "checks": [
     {
-      "name": "run",
-      "ok": false,
-      "detail": "Error: Need ~2 devnet SOL for this test, wallet has 1.870249957\n    at main (/home/runner/work/hyperliquid/hyperliquid/scripts/src/devnet-leverage-smoke.ts:60:34)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)"
+      "name": "initialize / set params",
+      "ok": true,
+      "detail": "params reset"
+    },
+    {
+      "name": "vault funded (anyone can deposit)",
+      "ok": true,
+      "detail": "1.006105195 SOL in vault"
+    },
+    {
+      "name": "create market",
+      "ok": true,
+      "detail": "GCSPFMaHTgS3PxDC8vQe6amnoT3KkLzeSapiqjWi1WuS"
+    },
+    {
+      "name": "no trading without price history",
+      "ok": true,
+      "detail": "rejected with StalePrice"
+    },
+    {
+      "name": "price spam ignored (8 s spacing)",
+      "ok": true,
+      "detail": "1 observation(s) recorded"
+    },
+    {
+      "name": "pool SOL read from Meteora",
+      "ok": true,
+      "detail": "0.28875 SOL"
+    },
+    {
+      "name": "5x rejected on a 3x-tier coin",
+      "ok": true,
+      "detail": "rejected with TooMuchLeverage"
+    },
+    {
+      "name": "open 3x long",
+      "ok": true,
+      "detail": "tier 1, size 0.009 SOL"
+    },
+    {
+      "name": "per-coin cap enforced",
+      "ok": true,
+      "detail": "rejected with CapReached"
+    },
+    {
+      "name": "close before hold time rejected",
+      "ok": true,
+      "detail": "rejected with HoldTime"
+    },
+    {
+      "name": "pause blocks new positions",
+      "ok": true,
+      "detail": "rejected with Paused"
+    },
+    {
+      "name": "open 3x short",
+      "ok": true,
+      "detail": "nonce 4"
+    },
+    {
+      "name": "healthy position can't be liquidated",
+      "ok": true,
+      "detail": "rejected with NotLiquidatable"
+    },
+    {
+      "name": "close long: paid from vault, less impact + fees",
+      "ok": true,
+      "detail": "margin 0.003, paid back 0.002426881 SOL"
+    },
+    {
+      "name": "position account closed",
+      "ok": true,
+      "detail": "rent returned"
+    },
+    {
+      "name": "real pump on Meteora",
+      "ok": true,
+      "detail": "bought 1 SOL, price +63.6%"
+    },
+    {
+      "name": "short liquidated after pump",
+      "ok": true,
+      "detail": "liquidator balance change 0.00127008 SOL (reward + rent - fee)"
+    },
+    {
+      "name": "books balanced (no open interest left)",
+      "ok": true,
+      "detail": "long 0, short 0, locked margin 5000000"
     }
   ],
-  "walletSol": 1.870249957
+  "walletSol": 1.870249957,
+  "program": "F2vF7Xo4huUnhutSoyCLSLAfzyDdg9bAXeJb6M7RN9jH",
+  "mint": "8CfFhH9AWRiMC54Fv2X3PCXr1pjWUEyE3JHrVwzR3e5k",
+  "poolSol": 0.28875,
+  "longPayout": 0.002426881,
+  "pump": {
+    "solBought": 1,
+    "priceUp": "63.6%"
+  }
 }
