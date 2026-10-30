@@ -34,7 +34,7 @@ for f in leverage.so program-keypair.json program-id.txt leverage.so.sha256; do 
 (cd "$P" && sed "s#/tmp/pub/##" leverage.so.sha256 | sha256sum -c --quiet) || { echo "Download is corrupted. Re-run."; exit 1; }
 PROGRAM_ID="$(cat "$P/program-id.txt")"
 SIZE=$(stat -c %s "$P/leverage.so")
-MAXLEN=$(( SIZE * 5 / 4 ))   # 25% room for future upgrades
+MAXLEN=$SIZE   # no spare room: cheapest rent (a bigger upgrade later runs `solana program extend` first)
 
 if solana program show "$PROGRAM_ID" -u "$RPC" >/dev/null 2>&1; then
   echo "Program already deployed: $PROGRAM_ID"
