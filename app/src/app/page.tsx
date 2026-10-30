@@ -103,7 +103,10 @@ function Discover() {
   return (
     <main className="page">
       <section className="hero" aria-label="Obverse">
-        <video className="hero-video" src="/brand/hero.mp4" poster="/brand/hero.jpg" autoPlay muted loop playsInline preload="auto" aria-hidden="true" />
+        <picture aria-hidden="true">
+          <source srcSet="/brand/hero.webp" type="image/webp" />
+          <img className="hero-video" src="/brand/hero.jpg" alt="" fetchPriority="high" />
+        </picture>
         <div className="hero-shade" aria-hidden="true" />
         <div className="hero-content">
           <h1>Every coin has two sides.</h1>
