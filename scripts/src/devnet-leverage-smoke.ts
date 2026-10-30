@@ -55,11 +55,15 @@ const lamports = async (k: PublicKey) => BigInt(await connection.getBalance(k));
 
 async function main() {
   console.log(`program ${programId.toBase58()}  wallet ${admin.publicKey.toBase58()}`);
+  const startBal = await lamports(admin.publicKey);
+  result.walletSol = Number(startBal) / LAMPORTS_PER_SOL;
+  if (startBal < 2n * SOL) throw new Error(`Need ~2 devnet SOL for this test, wallet has ${result.walletSol}`);
   result.program = programId.toBase58();
 
-  // 1. Initialize (or reset params). $5,000/SOL makes a fresh 30-SOL-mcap
-  // coin land in the $100K-$500K tier (3x) for testing.
-  const solUsd = 5_000n * 1_000_000n;
+  // 1. Initialize (or reset params). The test coin uses a shallow curve
+  // (~4 SOL mcap after the first buy); $50,000/SOL puts it in the
+  // $100K-$500K tier (3x). Test-only numbers.
+  const solUsd = 50_000n * 1_000_000n;
   const globalInfo = await connection.getAccountInfo(lev.global);
   await send([globalInfo ? lev.setParams(admin.publicKey, solUsd, false, admin.publicKey) : lev.initialize(admin.publicKey, solUsd)]);
   check("initialize / set params", true, globalInfo ? "params reset" : "initialized");
@@ -82,7 +86,7 @@ async function main() {
       leftoverReceiver: admin.publicKey,
       payer: admin.publicKey,
       quoteMint: NATIVE_MINT,
-      ...curveConfig(false),
+      ...curveConfig(false, { initialMcapSol: 3, migrationMcapSol: 60 }),
     }),
     [admin, config],
   );
@@ -180,18 +184,32 @@ async function main() {
   );
   check("position account closed", (await connection.getAccountInfo(lev.position(marketKey, admin.publicKey, 1n))) === null, "rent returned");
 
-  // 7. Real pump: buy 1.5 SOL, let the TWAP catch up, liquidate the short
-  await send(
-    await dbc.pool.swap({
-      owner: admin.publicKey,
-      pool,
-      amountIn: new BN(1.5 * LAMPORTS_PER_SOL),
-      minimumAmountOut: new BN(1),
-      swapBaseForQuote: false,
-      referralTokenAccount: null,
-    }),
-  );
-  console.log("pumped; letting the 60 s TWAP catch up...");
+  // 7. Real pump until the coin is up >= 35% (1 SOL buys at a time), then
+  // let the TWAP catch up and liquidate the 3x short.
+  const sqrtNow = async () => (await dbc.state.getPool(pool))!.poolState.sqrtPrice as BN;
+  const sqrtStart = await sqrtNow();
+  const priceRatio = async () => {
+    const s = await sqrtNow();
+    return (Number(s.toString()) / Number(sqrtStart.toString())) ** 2;
+  };
+  let pumped = 0;
+  while ((await priceRatio()) < 1.35 && pumped < 3) {
+    await send(
+      await dbc.pool.swap({
+        owner: admin.publicKey,
+        pool,
+        amountIn: new BN(1 * LAMPORTS_PER_SOL),
+        minimumAmountOut: new BN(1),
+        swapBaseForQuote: false,
+        referralTokenAccount: null,
+      }),
+    );
+    pumped += 1;
+  }
+  const ratio = await priceRatio();
+  result.pump = { solBought: pumped, priceUp: `${((ratio - 1) * 100).toFixed(1)}%` };
+  check("real pump on Meteora", ratio >= 1.35, `bought ${pumped} SOL, price +${((ratio - 1) * 100).toFixed(1)}%`);
+  console.log("letting the 60 s TWAP catch up...");
   await updatePrices(75);
   const liqBefore = await lamports(admin.publicKey);
   try {
@@ -199,6 +217,8 @@ async function main() {
     check("short liquidated after pump", true, `liquidator balance change ${Number((await lamports(admin.publicKey)) - liqBefore) / LAMPORTS_PER_SOL} SOL (reward + rent - fee)`);
   } catch (e) {
     check("short liquidated after pump", false, programError(e) ?? (e as Error).message.split("\n")[0]);
+    // keep the books clean for the next run
+    await send([lev.closePosition(admin.publicKey, mint.publicKey, 4n)]).catch(() => {});
   }
   const vaultAfter = decodeVault((await connection.getAccountInfo(lev.vault))!.data);
   const mEnd = decodeMarket((await connection.getAccountInfo(marketKey))!.data);

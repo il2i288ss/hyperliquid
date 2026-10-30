@@ -37,7 +37,11 @@ const isMain = process.argv.includes("--main");
 const INITIAL_MCAP_SOL = 30;
 const MIGRATION_MCAP_SOL = 400;
 
-export function curveConfig(main: boolean) {
+export function curveConfig(
+  main: boolean,
+  /** Test-only override: a shallower curve so small buys move the price. */
+  opts: { initialMcapSol?: number; migrationMcapSol?: number } = {},
+) {
   const poolFeeBps = main ? MAIN_COIN_POOL_FEE_BPS : POOL_FEE_BPS;
   return buildCurveWithMarketCap({
     token: {
@@ -93,8 +97,8 @@ export function curveConfig(main: boolean) {
       cliffDurationFromMigrationTime: 0,
     },
     activationType: ActivationType.Slot,
-    initialMarketCap: INITIAL_MCAP_SOL,
-    migrationMarketCap: MIGRATION_MCAP_SOL,
+    initialMarketCap: opts.initialMcapSol ?? INITIAL_MCAP_SOL,
+    migrationMarketCap: opts.migrationMcapSol ?? MIGRATION_MCAP_SOL,
   });
 }
 
