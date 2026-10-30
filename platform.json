@@ -1,0 +1,11 @@
+{
+  "coins": [
+    {
+      "mint": "Cawen8n9mNJB7vh8ipaYBvgjTaWfp6uugsZhFjHhWbwf",
+      "pool": "3GcZLLBkW3bdkPrkDktKeHomv5msKUQTak1zThRLU3ox",
+      "name": "Demo Cat",
+      "symbol": "DCAT"
+    }
+  ],
+  "config": "2vXECqjW5vLPD4cvunQujy3jU5YfxrTEBmfJUNjFjYY9"
+}

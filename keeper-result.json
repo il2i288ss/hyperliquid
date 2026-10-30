@@ -1,0 +1,10 @@
+{
+  "mint": "Cawen8n9mNJB7vh8ipaYBvgjTaWfp6uugsZhFjHhWbwf",
+  "checks": [
+    {
+      "name": "keeper registered demo coin",
+      "ok": false,
+      "detail": "no market account"
+    }
+  ]
+}
