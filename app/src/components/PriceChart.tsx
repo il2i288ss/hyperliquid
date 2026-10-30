@@ -65,13 +65,13 @@ export function PriceChart({ trades, solUsd, coin }: { trades: Trade[]; solUsd: 
     const c = createChart(el.current, {
       autoSize: true,
       layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#8a8a8a", fontFamily: font, fontSize: 11 },
-      grid: { vertLines: { color: "#141414" }, horzLines: { color: "#141414" } },
-      rightPriceScale: { borderColor: "#262626", scaleMargins: { top: 0.15, bottom: 0.1 } },
-      timeScale: { borderColor: "#262626", timeVisible: true, secondsVisible: true, rightOffset: 6, barSpacing: 10 },
+      grid: { vertLines: { color: "#12111f" }, horzLines: { color: "#12111f" } },
+      rightPriceScale: { borderColor: "#1b1a2c", scaleMargins: { top: 0.15, bottom: 0.1 } },
+      timeScale: { borderColor: "#1b1a2c", timeVisible: true, secondsVisible: true, rightOffset: 6, barSpacing: 10 },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: { color: "#525252", labelBackgroundColor: "#262626" },
-        horzLine: { color: "#525252", labelBackgroundColor: "#262626" },
+        vertLine: { color: "#525252", labelBackgroundColor: "#1b1a2c" },
+        horzLine: { color: "#525252", labelBackgroundColor: "#1b1a2c" },
       },
       // Brand watermark: light weight, very faint
       watermark: { visible: true, text: BRAND.toLowerCase(), fontSize: 72, fontFamily: font, fontStyle: "300", color: "rgba(250, 250, 250, 0.045)", horzAlign: "center", vertAlign: "center" },

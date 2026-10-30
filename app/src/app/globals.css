@@ -3,24 +3,24 @@
      300 #373737 · 400 #525252 · 500 #8A8A8A · 600 #A3A3A3 · 700 #D4D4D4
      800 #E5E5E5 · 900 #F5F5F5 · 950 #FAFAFA. Fully monochrome: long = white,
      short = gray; signs (+/−) and labels carry the meaning. */
-  --bg: #0a0a0a;
-  --bar: rgba(10, 10, 10, .85);
-  --panel: #111111;
-  --panel-2: #1a1a1a;
-  --well: #0d0d0d;
-  --line: #1f1f1f;
-  --line-soft: #181818;
-  --line-strong: #2e2e2e;
+  --bg: #060510;
+  --bar: rgba(6, 5, 16, .85);
+  --panel: #0c0b19;
+  --panel-2: #151424;
+  --well: #080713;
+  --line: #1b1a2c;
+  --line-soft: #141323;
+  --line-strong: #2a2841;
   --text: #f5f5f5;
   --text-2: #c8c8c8;
-  --muted: #858585;
+  --muted: #8a89a0;
   --accent: #fafafa;
   --accent-ink: #0a0a0a;
-  --accent-soft: #262626;
+  --accent-soft: #1f1e33;
   --accent-text: #fafafa;
   --long: #fafafa;
   --long-ink: #0a0a0a;
-  --long-soft: #171717;
+  --long-soft: #151424;
   --long-line: #373737;
   --short: #a3a3a3;
   --short-ink: #0a0a0a;
