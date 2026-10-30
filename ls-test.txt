@@ -1,0 +1,30 @@
+PASS  market live with price history: tier 1, MC $126573, pool 3.17625 SOL, vault free 0.07 SOL, capacity 0.0035 SOL/side
+[ls] opened long 2x 0.001 SOL on Cawen8 for 8uGkCj
+PASS  open 2x long: {"ok":true,"position":{"id":"2d8e580f8ade9771","owner":"8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr","mint":"Cawen8n9mNJB7vh8ipaYBvgjTaWfp6uugsZhFjHhWbwf","lon
+PASS  same payment can't open twice
+[ls] refused 5eYcP4bV from 8uGkCj: Long/short capacity for this coin is full (refunding 0.0101 SOL)
+PASS  over-capacity open rejected: Long/short capacity for this coin is full
+PASS  refund paid back
+PASS  refund reached wallet: net cost 0.000005 SOL (network fees only)
+PASS  close before hold time rejected: Hold for at least 20 s before closing
+PASS  wrong signer rejected: Bad signature
+PASS  positions survive a restart
+[ls] close long 2d8e580f8ade9771 on Cawen8: pays 0.000494371 SOL
+PASS  signed close settles: payout 0.000494371 SOL, pnl -6.29e-7
+PASS  close payout sent
+PASS  close payout reached wallet
+[ls] opened short 2x 0.001 SOL on Cawen8 for 8uGkCj
+[ls] opened long 2x 0.001 SOL on Cawen8 for 8uGkCj
+PASS  open short with TP and long with SL
+PASS  TP/SL wait for hold time
+[ls] tp short ac71b132729e1c6c on Cawen8: pays 0.000494371 SOL
+[ls] sl long 380c6044d5eb43f6 on Cawen8: pays 0.000494371 SOL
+PASS  take profit fired: sl,tp,close
+PASS  stop loss fired
+PASS  TP/SL payouts sent
+[ls] opened long 2x 0.001 SOL on Cawen8 for 8uGkCj
+[ls] liquidated long ea760b3f24ca9aa8 on Cawen8: pays 0 SOL
+PASS  liquidation at 90% loss pays nothing: liquidated payout 0
+PASS  no open positions or pending payouts left
+
+All checks passed

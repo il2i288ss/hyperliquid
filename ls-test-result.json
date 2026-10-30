@@ -1,0 +1,97 @@
+[
+  {
+    "name": "market live with price history",
+    "ok": true,
+    "detail": "tier 1, MC $126573, pool 3.17625 SOL, vault free 0.07 SOL, capacity 0.0035 SOL/side"
+  },
+  {
+    "name": "open 2x long",
+    "ok": true,
+    "detail": "{\"ok\":true,\"position\":{\"id\":\"2d8e580f8ade9771\",\"owner\":\"8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr\",\"mint\":\"Cawen8n9mNJB7vh8ipaYBvgjTaWfp6uugsZhFjHhWbwf\",\"lon"
+  },
+  {
+    "name": "same payment can't open twice",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "over-capacity open rejected",
+    "ok": true,
+    "detail": "Long/short capacity for this coin is full"
+  },
+  {
+    "name": "refund paid back",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "refund reached wallet",
+    "ok": true,
+    "detail": "net cost 0.000005 SOL (network fees only)"
+  },
+  {
+    "name": "close before hold time rejected",
+    "ok": true,
+    "detail": "Hold for at least 20 s before closing"
+  },
+  {
+    "name": "wrong signer rejected",
+    "ok": true,
+    "detail": "Bad signature"
+  },
+  {
+    "name": "positions survive a restart",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "signed close settles",
+    "ok": true,
+    "detail": "payout 0.000494371 SOL, pnl -6.29e-7"
+  },
+  {
+    "name": "close payout sent",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "close payout reached wallet",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "open short with TP and long with SL",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "TP/SL wait for hold time",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "take profit fired",
+    "ok": true,
+    "detail": "sl,tp,close"
+  },
+  {
+    "name": "stop loss fired",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "TP/SL payouts sent",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "liquidation at 90% loss pays nothing",
+    "ok": true,
+    "detail": "liquidated payout 0"
+  },
+  {
+    "name": "no open positions or pending payouts left",
+    "ok": true,
+    "detail": ""
+  }
+]
