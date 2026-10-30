@@ -92,7 +92,7 @@ for (const [label, cfg] of Object.entries(CONFIGS)) {
   let feesLaunch = 0n, protoLaunch = 0n, feesLater = 0n, protoLater = 0n, nLaunch = 0, nLater = 0, inLaunch = 0n;
   const rows: string[] = [];
   for (let i = 0; i < ok.length; i += 50) {
-    const txs = await connection.getTransactions(ok.slice(i, i + 50).map((x) => x.signature), { maxSupportedTransactionVersion: 0 });
+    const txs = await connection.getTransactions(ok.slice(i, i + 50).map((x) => x.signature), { maxSupportedTransactionVersion: 1 } as never);
     txs.forEach((tx, j) => {
       if (!tx?.meta) return;
       const datas: Buffer[] = [];
