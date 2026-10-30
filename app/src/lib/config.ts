@@ -8,15 +8,18 @@ export const DBC_CONFIG = new PublicKey(
   process.env.NEXT_PUBLIC_DBC_CONFIG ?? "2vXECqjW5vLPD4cvunQujy3jU5YfxrTEBmfJUNjFjYY9",
 );
 /**
- * The platform's own "main coin" config: 100% of its trading fees go to the
- * treasury, no launch fee, no holder rewards, and long/short never tracks it.
+ * The platform's own "main coin" config: 3% tax, 100% of the fees (and the
+ * locked LP after graduation) go to the wallet that launched it. No launch
+ * fee, no holder rewards, long/short never tracks it, and it's not listed.
  */
 export const MAIN_DBC_CONFIG: PublicKey | null =
   process.env.NEXT_PUBLIC_MAIN_CONFIG
     ? new PublicKey(process.env.NEXT_PUBLIC_MAIN_CONFIG)
     : process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta"
-      ? new PublicKey("GpESQwWJgHsmWfk2sD28GzZt2xZLMeT2WKhBiqnBevCL")
+      ? new PublicKey("4eum1BgtpwPp9HtGSbaE2Xyq3zJeV5k8sYg8EskVk6Gh")
       : null;
+/** The only wallet the site lets launch the main coin. */
+export const MAIN_LAUNCHER = process.env.NEXT_PUBLIC_MAIN_LAUNCHER ?? "AUUcYgSGYo7hUD9cV8PeG6ybHKL2jbYNTvnv2TUTWokj";
 export const LEVERAGE_PROGRAM = new PublicKey(
   process.env.NEXT_PUBLIC_LEVERAGE_PROGRAM ?? "CVa7fiyDKgrE1EHxcgLPNJv69Yj5hLSfnfu1XhhhuR2x",
 );

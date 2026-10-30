@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { buildLaunchTx } from "@/lib/meteora";
-import { LAUNCH_FEE_SOL, LAUNCH_RENT_SOL, MAIN_DBC_CONFIG } from "@/lib/config";
+import { LAUNCH_FEE_SOL, LAUNCH_RENT_SOL, MAIN_DBC_CONFIG, MAIN_LAUNCHER, explorer } from "@/lib/config";
+import { MainCoinFees } from "@/components/MainCoinFees";
 import { txError } from "@/lib/txError";
 
 type Status = "" | "uploading" | "signing" | "sending";
@@ -38,6 +39,7 @@ function LaunchPage() {
   const [firstBuy, setFirstBuy] = useState("0");
   const [status, setStatus] = useState<Status>("");
   const [error, setError] = useState("");
+  const [done, setDone] = useState<{ mint: string; sig: string } | null>(null);
 
   useEffect(() => {
     if (!image) return setPreview("");
@@ -52,8 +54,11 @@ function LaunchPage() {
   const buy = Math.max(0, Number(firstBuy) || 0);
   const missing = !form.name.trim() ? "Add a name" : !form.symbol.trim() ? "Add a ticker" : !image ? "Add an image" : "";
 
+  const notLauncher = isMain && Boolean(publicKey) && publicKey!.toBase58() !== MAIN_LAUNCHER;
+
   async function launch() {
     if (!publicKey || !signTransaction) return setVisible(true);
+    if (notLauncher) return setError("Only the platform wallet can launch the main coin.");
     if (missing) return setError(missing);
     setError("");
     const needed = (launchFee + buy + LAUNCH_RENT_SOL) * 1e9;
@@ -84,7 +89,8 @@ function LaunchPage() {
       setStatus("sending");
       const sig = await connection.sendRawTransaction(signed.serialize());
       await connection.confirmTransaction(sig, "confirmed");
-      router.push(`/coin/${mint.toBase58()}`);
+      if (isMain) setDone({ mint: mint.toBase58(), sig });
+      else router.push(`/coin/${mint.toBase58()}`);
     } catch (e) {
       setError(txError(e));
     } finally {
@@ -98,7 +104,7 @@ function LaunchPage() {
       <header className="page-title">
         <h1>{isMain ? "Launch the main coin" : "Launch a coin"}</h1>
         <p>{isMain
-          ? "The platform's own coin. All of its trading fees go to the treasury, there's no launch fee, and long / short is never opened on it"
+          ? "The platform's own coin. 3% tax, all of it to the wallet that launches it. No launch fee, no long / short, and it isn't listed on the launchpad"
           : "It goes live in one transaction. Holders earn SOL from the first trade, and the coin gets its own long and short market once it has liquidity"}</p>
       </header>
       <div className="coin-grid">
@@ -162,16 +168,19 @@ function LaunchPage() {
               <div><span>Network and rent</span><span>≈ {LAUNCH_RENT_SOL} SOL</span></div>
               <div className="total"><span>Total</span><span>≈ {(launchFee + buy + LAUNCH_RENT_SOL).toFixed(3)} SOL</span></div>
             </div>
-            <button type="button" className="cta" disabled={!!status} onClick={launch}>
+            <button type="button" className="cta" disabled={!!status || notLauncher} onClick={launch}>
               {publicKey ? LABEL[status] : "Connect wallet"}
             </button>
+            {notLauncher && <p className="msg-err" role="alert">This wallet can&apos;t launch the main coin. Connect {MAIN_LAUNCHER.slice(0, 4)}…{MAIN_LAUNCHER.slice(-4)}.</p>}
             {error && <p className="msg-err" role="alert">{error}</p>}
+            {done && <p className="msg-ok">Main coin launched. Address <span className="mono">{done.mint}</span> · <a href={explorer("tx", done.sig)} target="_blank" rel="noreferrer">View transaction</a></p>}
             <p className="note">
               {isMain
-                ? "Every trade's fee goes to the treasury, collected automatically every 15 minutes. Buys in the launch block pay a 90% anti-sniper tax"
+                ? "Every trade pays a 3% tax to your wallet, claimable below anytime. Buys in the launch block pay a 90% anti-sniper tax"
                 : "Every trade pays 3%: 1% to holders in SOL every 15 minutes, 1.9% to the long and short vault, 0.1% to the platform. Buys in the launch block pay a 90% anti-sniper tax"}
             </p>
           </section>
+          {isMain && !notLauncher && <MainCoinFees />}
         </aside>
       </div>
     </main>
