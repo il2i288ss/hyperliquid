@@ -11,7 +11,8 @@
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "snapshot": "tsx src/rewards/snapshot.ts",
-    "airdrop": "tsx src/rewards/airdrop.ts"
+    "airdrop": "tsx src/rewards/airdrop.ts",
+    "smoke": "tsx src/devnet-smoke.ts"
   },
   "dependencies": {
     "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.8",

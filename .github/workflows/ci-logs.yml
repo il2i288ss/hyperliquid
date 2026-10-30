@@ -31,6 +31,9 @@ jobs:
           find $SDK/dist -name "*.d.ts" -exec cp {} /tmp/out/sdk/ \; || true
           cp $SDK/dist/index.js /tmp/out/sdk/index.js 2>/dev/null || cp $SDK/dist/index.cjs /tmp/out/sdk/index.js 2>/dev/null || true
           (cd scripts && npm ls --depth=0) > /tmp/out/versions.txt 2>&1 || true
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)" > /dev/null 2>&1 || true
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          (solana --version && cargo build-sbf --manifest-path programs/leverage/Cargo.toml && ls -la target/deploy) > /tmp/out/program-sbf.txt 2>&1 || true
       - name: Push to ci-logs branch
         run: |
           cd /tmp/out

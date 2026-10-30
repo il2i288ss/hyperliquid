@@ -1,0 +1,46 @@
+name: Devnet test
+
+# Runs the full launchpad flow on Solana devnet (fake SOL):
+# config -> launch -> fee checks -> buy -> sell -> claim fees.
+# Uses the DEVNET_KEYPAIR secret if set, otherwise a throwaway wallet
+# funded by the devnet faucet. Results go to the `devnet-state` branch.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: devnet
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: scripts } }
+    env:
+      RPC_URL: ${{ vars.DEVNET_RPC_URL || 'https://api.devnet.solana.com' }}
+      ADMIN_KEYPAIR: ${{ github.workspace }}/devnet.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - name: Devnet wallet
+        env:
+          DEVNET_KEYPAIR: ${{ secrets.DEVNET_KEYPAIR }}
+        run: |
+          if [ -n "$DEVNET_KEYPAIR" ]; then
+            printf '%s' "$DEVNET_KEYPAIR" > "$ADMIN_KEYPAIR"; chmod 600 "$ADMIN_KEYPAIR"
+          fi
+          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.5
+      - name: Smoke test
+        run: npm run smoke
+      - name: Publish results
+        if: always()
+        run: |
+          mkdir -p /tmp/state
+          cp smoke-result.json /tmp/state/ 2>/dev/null || echo '{"error":"no result"}' > /tmp/state/smoke-result.json
+          cd /tmp/state
+          git init -q -b devnet-state
+          git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
+          git add -A && git commit -q -m "devnet smoke ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" devnet-state
