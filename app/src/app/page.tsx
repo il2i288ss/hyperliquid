@@ -75,14 +75,10 @@ function Discover() {
   const { coins, error } = useCoins();
   const q = (useSearchParams().get("q") ?? "").toLowerCase();
   const [sort, setSort] = useState<SortKey>("new");
-  const [lsOnly, setLsOnly] = useState(false);
-  const [hideGrad, setHideGrad] = useState(false);
 
   useEffect(() => {
     const s = readPref<SortKey>("discover.sort", "new");
     setSort(s in SORTS ? s : "new");
-    setLsOnly(readPref("discover.ls", false));
-    setHideGrad(readPref("discover.hideGrad", false));
   }, []);
   const pick = (s: SortKey) => {
     setSort(s);
@@ -93,10 +89,8 @@ function Discover() {
     () =>
       (coins ?? [])
         .filter((c) => !q || c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q) || c.mint.toLowerCase() === q)
-        .filter((c) => !lsOnly || c.leverage)
-        .filter((c) => !hideGrad || !c.graduated)
         .sort(SORTS[sort].fn),
-    [coins, q, lsOnly, hideGrad, sort],
+    [coins, q, sort],
   );
 
   const totalLiq = (coins ?? []).reduce((a, c) => a + c.quoteReserveSol, 0);
@@ -144,16 +138,6 @@ function Discover() {
               </button>
             ))}
           </div>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <label className="toggle">
-              <input type="checkbox" checked={lsOnly} onChange={(e) => { setLsOnly(e.target.checked); writePref("discover.ls", e.target.checked); }} />
-              Long/short live
-            </label>
-            <label className="toggle">
-              <input type="checkbox" checked={hideGrad} onChange={(e) => { setHideGrad(e.target.checked); writePref("discover.hideGrad", e.target.checked); }} />
-              Hide graduated
-            </label>
-          </div>
         </div>
         <div className="grid-head">
           <span>Coin</span>
@@ -164,7 +148,7 @@ function Discover() {
           <span>Bonding curve</span>
           <span />
         </div>
-        {coins && !list.length && <p className="empty">{q || lsOnly || hideGrad ? "No coins match these filters." : "No coins yet. Be the first to launch one."}</p>}
+        {coins && !list.length && <p className="empty">{q ? "No coins match your search." : "No coins yet. Be the first to launch one."}</p>}
         {list.slice(0, 200).map((c) => <Row key={c.mint} c={c} />)}
       </section>
     </main>
