@@ -13,6 +13,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { LEVERAGE_PROGRAM } from "./config";
+import { txError } from "./txError";
 
 const DISC = {
   open_position: [135, 128, 47, 77, 15, 152, 240, 49],
@@ -150,6 +151,5 @@ export function leverageError(e: unknown): string {
     const name = ERRORS[parseInt(m[1], 16) - 6000];
     if (name) return FRIENDLY[name] ?? name;
   }
-  if (/User rejected/i.test(msg)) return "Cancelled in wallet.";
-  return msg.split("\n")[0].slice(0, 200);
+  return txError(e);
 }

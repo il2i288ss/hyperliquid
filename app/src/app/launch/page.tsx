@@ -6,6 +6,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { buildLaunchTx } from "@/lib/meteora";
 import { LAUNCH_FEE_SOL, LAUNCH_RENT_SOL } from "@/lib/config";
+import { txError } from "@/lib/txError";
 
 type Status = "" | "uploading" | "signing" | "sending";
 const LABEL: Record<Status, string> = {
@@ -45,6 +46,10 @@ export default function LaunchPage() {
     if (!publicKey || !signTransaction) return setVisible(true);
     if (missing) return setError(missing);
     setError("");
+    const needed = (LAUNCH_FEE_SOL + buy + LAUNCH_RENT_SOL) * 1e9;
+    if ((await connection.getBalance(publicKey)) < needed) {
+      return setError(txError(new Error("insufficient funds")));
+    }
     try {
       setStatus("uploading");
       const body = new FormData();
@@ -70,8 +75,7 @@ export default function LaunchPage() {
       await connection.confirmTransaction(sig, "confirmed");
       router.push(`/coin/${mint.toBase58()}`);
     } catch (e) {
-      const msg = (e as Error).message;
-      setError(/User rejected/i.test(msg) ? "Cancelled in wallet." : msg);
+      setError(txError(e));
     } finally {
       setStatus("");
     }

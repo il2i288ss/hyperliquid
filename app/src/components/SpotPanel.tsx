@@ -9,6 +9,7 @@ import BN from "bn.js";
 import { buildSwapTx } from "@/lib/meteora";
 import { explorer } from "@/lib/config";
 import type { Coin } from "@/lib/coins";
+import { txError } from "@/lib/txError";
 
 export function SpotPanel({ coin, side, onDone }: { coin: Coin; side: "buy" | "sell"; onDone: () => void }) {
   const { connection } = useConnection();
@@ -61,8 +62,7 @@ export function SpotPanel({ coin, side, onDone }: { coin: Coin; side: "buy" | "s
       setAmount("");
       onDone();
     } catch (e) {
-      const m = (e as Error).message;
-      setMsg({ err: /User rejected/i.test(m) ? "Cancelled in wallet." : /slippage|0x1771|exceed/i.test(m) ? "Price moved too much. Try again or raise slippage." : m.split("\n")[0] });
+      setMsg({ err: txError(e) });
     } finally {
       setBusy(false);
     }
