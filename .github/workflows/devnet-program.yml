@@ -47,12 +47,18 @@ jobs:
           sed -i "s/declare_id!(\"[A-Za-z0-9]*\")/declare_id!(\"$PROGRAM_ID\")/" programs/leverage/src/lib.rs
           grep -n "declare_id" programs/leverage/src/lib.rs
           cargo build-sbf --manifest-path programs/leverage/Cargo.toml
-      - name: Deploy / upgrade
+      - name: Deploy / upgrade (skipped if unchanged)
         run: |
-          solana program deploy target/deploy/leverage.so \
-            --program-id /tmp/state/program-keypair.json --max-sign-attempts 60
+          SO=target/deploy/leverage.so
+          if solana program dump "$PROGRAM_ID" /tmp/onchain.so >/dev/null 2>&1 \
+             && cmp -s -n "$(stat -c%s $SO)" "$SO" /tmp/onchain.so; then
+            echo "On-chain program matches this build; skipping deploy."
+          else
+            echo "Deploying (an upgrade temporarily needs ~2x the program size in SOL)..."
+            solana program deploy "$SO" --program-id /tmp/state/program-keypair.json --max-sign-attempts 60
+          fi
           solana program show "$PROGRAM_ID"
-          echo "balance after deploy $(solana balance)"
+          echo "balance $(solana balance)"
       - name: Long/short test
         working-directory: scripts
         env:

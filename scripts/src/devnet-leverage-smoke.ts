@@ -57,7 +57,7 @@ async function main() {
   console.log(`program ${programId.toBase58()}  wallet ${admin.publicKey.toBase58()}`);
   const startBal = await lamports(admin.publicKey);
   result.walletSol = Number(startBal) / LAMPORTS_PER_SOL;
-  if (startBal < 2n * SOL) throw new Error(`Need ~2 devnet SOL for this test, wallet has ${result.walletSol}`);
+  if (startBal < (12n * SOL) / 10n) throw new Error(`Need ~1.2 devnet SOL for this test, wallet has ${result.walletSol}`);
   result.program = programId.toBase58();
 
   // 1. Initialize (or reset params). The test coin uses a shallow curve
@@ -68,12 +68,12 @@ async function main() {
   await send([globalInfo ? lev.setParams(admin.publicKey, solUsd, false, admin.publicKey) : lev.initialize(admin.publicKey, solUsd)]);
   check("initialize / set params", true, globalInfo ? "params reset" : "initialized");
 
-  // 2. Fund the vault to 1 SOL of free capital
+  // 2. Fund the vault to 0.5 SOL of free capital
   const vaultState = decodeVault((await connection.getAccountInfo(lev.vault))!.data);
   const vaultBal = await lamports(lev.vault);
   const free = vaultBal - vaultState.lockedMargin;
-  if (free < SOL) {
-    await send([SystemProgram.transfer({ fromPubkey: admin.publicKey, toPubkey: lev.vault, lamports: SOL - free })]);
+  if (free < SOL / 2n) {
+    await send([SystemProgram.transfer({ fromPubkey: admin.publicKey, toPubkey: lev.vault, lamports: SOL / 2n - free })]);
   }
   check("vault funded (anyone can deposit)", true, `${Number(await lamports(lev.vault)) / LAMPORTS_PER_SOL} SOL in vault`);
 
@@ -104,7 +104,7 @@ async function main() {
       },
       firstBuyParam: {
         buyer: admin.publicKey,
-        buyAmount: new BN(0.5 * LAMPORTS_PER_SOL),
+        buyAmount: new BN(0.3 * LAMPORTS_PER_SOL),
         minimumAmountOut: new BN(1),
         referralTokenAccount: null,
       },
@@ -140,10 +140,10 @@ async function main() {
   await updatePrices(100);
   const m1 = decodeMarket((await connection.getAccountInfo(marketKey))!.data);
   result.poolSol = Number(m1.poolSol) / LAMPORTS_PER_SOL;
-  check("pool SOL read from Meteora", m1.poolSol > SOL / 4n, `${Number(m1.poolSol) / LAMPORTS_PER_SOL} SOL`);
+  check("pool SOL read from Meteora", m1.poolSol > SOL / 5n, `${Number(m1.poolSol) / LAMPORTS_PER_SOL} SOL`);
 
   // 5. Tier + cap rules. Tier 1 = 3x; cap = 5% of pool SOL.
-  const margin = SOL / 200n; // 0.005 SOL -> 0.015 SOL position at 3x
+  const margin = (SOL * 3n) / 1000n; // 0.003 SOL -> 0.009 SOL position at 3x
   await expectError("5x rejected on a 3x-tier coin", [lev.openPosition(admin.publicKey, mint.publicKey, 1n, true, margin, 5)], "TooMuchLeverage");
 
   await send([lev.openPosition(admin.publicKey, mint.publicKey, 1n, true, margin, 3)]);
@@ -184,7 +184,7 @@ async function main() {
   );
   check("position account closed", (await connection.getAccountInfo(lev.position(marketKey, admin.publicKey, 1n))) === null, "rent returned");
 
-  // 7. Real pump until the coin is up >= 35% (1 SOL buys at a time), then
+  // 7. Real pump until the coin is up >= 35% (0.5 SOL buys at a time), then
   // let the TWAP catch up and liquidate the 3x short.
   const sqrtNow = async () => (await dbc.state.getPool(pool))!.poolState.sqrtPrice as BN;
   const sqrtStart = await sqrtNow();
@@ -193,18 +193,18 @@ async function main() {
     return (Number(s.toString()) / Number(sqrtStart.toString())) ** 2;
   };
   let pumped = 0;
-  while ((await priceRatio()) < 1.35 && pumped < 3) {
+  while ((await priceRatio()) < 1.35 && pumped < 2) {
     await send(
       await dbc.pool.swap({
         owner: admin.publicKey,
         pool,
-        amountIn: new BN(1 * LAMPORTS_PER_SOL),
+        amountIn: new BN(0.5 * LAMPORTS_PER_SOL),
         minimumAmountOut: new BN(1),
         swapBaseForQuote: false,
         referralTokenAccount: null,
       }),
     );
-    pumped += 1;
+    pumped += 0.5;
   }
   const ratio = await priceRatio();
   result.pump = { solBought: pumped, priceUp: `${((ratio - 1) * 100).toFixed(1)}%` };
