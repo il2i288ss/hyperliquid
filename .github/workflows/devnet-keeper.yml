@@ -5,6 +5,10 @@ name: Devnet keeper test
 # the coin for long/short and recorded its prices.
 on:
   workflow_dispatch:
+    inputs:
+      demo_buy:
+        description: SOL for the demo coin's first buy (0 = no new coin)
+        default: "0.3"
 
 permissions:
   contents: write
@@ -30,14 +34,20 @@ jobs:
         run: |
           printf '%s' "$DEVNET_KEYPAIR" > "$ADMIN_KEYPAIR"; chmod 600 "$ADMIN_KEYPAIR"
           git clone -q --depth 1 -b devnet-state "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/state
-          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.6 2>&1 | tee /tmp/state/wallet.txt; test "${PIPESTATUS[0]}" -eq 0
+          set -o pipefail
+          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.6 2>&1 | tee /tmp/state/wallet.txt
           git clone -q --depth 1 -b devnet-program "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/program || true
           ID="$(cat /tmp/program/program-id.txt 2>/dev/null || cat /tmp/state/leverage-program-id.txt)"
           echo "LEVERAGE_PROGRAM_ID=$ID" >> "$GITHUB_ENV"
       - name: Platform config + demo coin
-        run: npx tsx src/devnet-platform.ts /tmp/state 0.3
+        run: npx tsx src/devnet-platform.ts /tmp/state "${{ inputs.demo_buy || '0.3' }}"
       - name: Run keeper for 100 s
-        run: timeout 100 npm run keeper || [ $? -eq 124 ]
+        run: |
+          set +e
+          timeout 100 npm run keeper > /tmp/state/keeper-log.txt 2>&1
+          code=$?
+          tail -40 /tmp/state/keeper-log.txt
+          [ $code -eq 124 ] || [ $code -eq 0 ]
       - name: Check keeper results
         run: npx tsx src/devnet-keeper-check.ts
       - name: Publish state
