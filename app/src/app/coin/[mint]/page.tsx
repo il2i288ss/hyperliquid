@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CoinAvatar } from "@/components/CoinAvatar";
 import { CopyButton } from "@/components/CopyButton";
+import { Socials } from "@/components/Socials";
 import { VaultCard } from "@/components/VaultCard";
 import { SpotPanel } from "@/components/SpotPanel";
 import { LeveragePanel } from "@/components/LeveragePanel";
@@ -77,20 +78,18 @@ export default function CoinPage() {
     <>
       <section className="strip">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <CoinAvatar mint={coin.mint} name={coin.name} image={coin.image} large expandable />
+          <CoinAvatar mint={coin.mint} name={coin.name} image={coin.image} large expandable zoom />
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{coin.name}</h1>
-              <span className="muted">${coin.symbol}</span>
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600, letterSpacing: "-.01em" }}>{coin.name}</h1>
+              <span className="muted">{coin.symbol}</span>
+              <CopyButton value={coin.mint} />
               {coin.leverage && <span className="badge ls">Long/Short · up to {tier.leverage}x</span>}
               {coin.graduated && <span className="badge grad">Graduated</span>}
             </div>
             <div className="muted" style={{ fontSize: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-              <CopyButton value={coin.mint} />
+              <Socials links={coin.links} size={15} />
               <a href={explorer("address", coin.mint)} target="_blank" rel="noreferrer">Solscan <Icon name="external" size={12} /></a>
-              {coin.links.website && <a href={coin.links.website} target="_blank" rel="noreferrer nofollow"><Icon name="globe" size={13} /> Website</a>}
-              {coin.links.twitter && <a href={coin.links.twitter} target="_blank" rel="noreferrer nofollow">X</a>}
-              {coin.links.telegram && <a href={coin.links.telegram} target="_blank" rel="noreferrer nofollow"><Icon name="send" size={13} /> Telegram</a>}
               <span>{age(coin.ageSeconds)} old</span>
               <span>by <span className="mono">{short(coin.creator)}</span></span>
             </div>
@@ -108,7 +107,7 @@ export default function CoinPage() {
       <main className="page">
         <div className="split">
           <div className="main">
-            <PriceChart trades={trades} solUsd={solUsd} />
+            <PriceChart trades={trades} solUsd={solUsd} coin={coin} />
 
             <section className="panel">
               <div className="subtabs" role="tablist" aria-label="Activity">

@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProviders } from "@/components/WalletProviders";
 import { TopBar } from "@/components/TopBar";
 import { NetworkBanner } from "@/components/NetworkBanner";
 import { BRAND, TAGLINE } from "@/lib/config";
 
-const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
+const sans = Geist({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata = {
   title: { default: `${BRAND} · ${TAGLINE}`, template: `%s · ${BRAND}` },

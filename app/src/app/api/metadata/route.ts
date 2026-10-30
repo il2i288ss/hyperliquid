@@ -51,6 +51,7 @@ export async function POST(req: Request) {
       website: String(form.get("website") ?? ""),
       twitter: String(form.get("twitter") ?? ""),
       telegram: String(form.get("telegram") ?? ""),
+      youtube: String(form.get("youtube") ?? ""),
     };
     const metadata = {
       name,
@@ -58,6 +59,7 @@ export async function POST(req: Request) {
       description,
       image: imageUri,
       extensions: links,
+      ...Object.fromEntries(Object.entries(links).filter(([, v]) => v)),
       properties: { files: [{ uri: imageUri, type: image.type }], category: "image" },
     };
     const uri = await pin(JSON.stringify({ pinataContent: metadata }), true);

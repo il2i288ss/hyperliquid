@@ -33,13 +33,19 @@ export type Coin = {
   leverage: boolean;
   image: string;
   description: string;
-  links: { website?: string; twitter?: string; telegram?: string };
+  links: { website?: string; twitter?: string; telegram?: string; youtube?: string };
 };
 
 type OffChain = { image: string; description: string; links: Coin["links"] };
 const offChain = new Map<string, OffChain>();
-const ipfs = (u: string) => (u.startsWith("ipfs://") ? `https://gateway.pinata.cloud/ipfs/${u.slice(7)}` : u);
+const ipfs = (u: string) => (u.startsWith("ipfs://") ? `https://ipfs.io/ipfs/${u.slice(7)}` : u);
 const safeUrl = (u: unknown) => (typeof u === "string" && /^https:\/\//.test(ipfs(u)) ? ipfs(u) : "");
+/** IPFS images go through /api/img so they load on our site; others as-is. */
+const imageUrl = (u: unknown) => {
+  if (typeof u !== "string") return "";
+  const m = u.match(/(?:ipfs:\/\/|\/ipfs\/)([1-9A-HJ-NP-Za-km-z]{46}|b[a-z2-7]{58,})/);
+  return m ? `/api/img/${m[1]}` : safeUrl(u);
+};
 
 /** Image, description and links from the metadata JSON (cached forever per uri). */
 async function loadOffChain(uris: string[]) {
@@ -47,13 +53,26 @@ async function loadOffChain(uris: string[]) {
   await Promise.all(
     todo.map(async (uri) => {
       try {
-        const r = await fetch(ipfs(uri), { signal: AbortSignal.timeout(4_000) });
-        const j = await r.json();
+        const cid = uri.match(/\/ipfs\/([^/?#]+)/)?.[1];
+        const urls = cid ? [`https://ipfs.io/ipfs/${cid}`, `https://gateway.pinata.cloud/ipfs/${cid}`, `https://dweb.link/ipfs/${cid}`] : [ipfs(uri)];
+        let j: any = null;
+        for (const u of urls) {
+          try {
+            const r = await fetch(u, { signal: AbortSignal.timeout(4_000) });
+            if (r.ok) { j = await r.json(); break; }
+          } catch { /* next */ }
+        }
+        if (!j) throw new Error("metadata unavailable");
         const ext = j.extensions ?? {};
         offChain.set(uri, {
-          image: safeUrl(j.image),
+          image: imageUrl(j.image),
           description: typeof j.description === "string" ? j.description.slice(0, 500) : "",
-          links: { website: safeUrl(ext.website) || undefined, twitter: safeUrl(ext.twitter) || undefined, telegram: safeUrl(ext.telegram) || undefined },
+          links: {
+            website: safeUrl(ext.website ?? j.website) || undefined,
+            twitter: safeUrl(ext.twitter ?? j.twitter) || undefined,
+            telegram: safeUrl(ext.telegram ?? j.telegram) || undefined,
+            youtube: safeUrl(ext.youtube ?? j.youtube) || undefined,
+          },
         });
       } catch {
         /* try again next refresh */

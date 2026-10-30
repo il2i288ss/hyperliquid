@@ -22,7 +22,7 @@ export default function LaunchPage() {
   const { setVisible } = useWalletModal();
   const router = useRouter();
 
-  const [form, setForm] = useState({ name: "", symbol: "", description: "", website: "", twitter: "", telegram: "" });
+  const [form, setForm] = useState({ name: "", symbol: "", description: "", website: "", twitter: "", telegram: "", youtube: "" });
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [firstBuy, setFirstBuy] = useState("0");
@@ -115,6 +115,7 @@ export default function LaunchPage() {
             <label className="field" style={{ flex: "1 1 180px" }}><span>Website</span><input className="input text" value={form.website} onChange={set("website")} placeholder="https://" /></label>
             <label className="field" style={{ flex: "1 1 180px" }}><span>X / Twitter</span><input className="input text" value={form.twitter} onChange={set("twitter")} placeholder="https://x.com/" /></label>
             <label className="field" style={{ flex: "1 1 180px" }}><span>Telegram</span><input className="input text" value={form.telegram} onChange={set("telegram")} placeholder="https://t.me/" /></label>
+            <label className="field" style={{ flex: "1 1 180px" }}><span>YouTube</span><input className="input text" value={form.youtube} onChange={set("youtube")} placeholder="https://youtube.com/" /></label>
           </div>
         </section>
 

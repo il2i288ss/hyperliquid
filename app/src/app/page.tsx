@@ -9,7 +9,7 @@ import { age, price, usd } from "@/lib/format";
 import { tierFor } from "@/lib/tiers";
 import { useCoins } from "@/lib/useCoins";
 import type { Coin } from "@/lib/coins";
-import { Icon } from "@/components/Icon";
+import { Socials } from "@/components/Socials";
 
 const SORTS = {
   new: { label: "Newest", fn: (a: Coin, b: Coin) => a.ageSeconds - b.ageSeconds },
@@ -40,11 +40,13 @@ function Row({ c }: { c: Coin }) {
   return (
     <Link href={`/coin/${c.mint}`} className="grid-row">
       <div className="who">
-        <CoinAvatar mint={c.mint} name={c.name} image={c.image} />
+        <CoinAvatar mint={c.mint} name={c.name} image={c.image} zoom />
         <div>
-          <b>{c.name}</b>
-          <span className="muted" style={{ fontSize: 12 }}>${c.symbol}</span>
-          <span style={{ marginLeft: -6 }}><CopyButton value={c.mint} label="" /></span>
+          <span className="name-line"><b>{c.name}</b><span className="muted">{c.symbol}</span></span>
+          <span className="meta-line">
+            <CopyButton value={c.mint} label="" />
+            <Socials links={c.links} size={14} />
+          </span>
         </div>
       </div>
       <div><span className="cell-label">Age</span>{age(c.ageSeconds)}</div>
@@ -97,6 +99,10 @@ function Discover() {
     [coins, q, lsOnly, hideGrad, sort],
   );
 
+  const totalLiq = (coins ?? []).reduce((a, c) => a + c.quoteReserveSol, 0);
+  const totalMc = (coins ?? []).reduce((a, c) => a + c.mcapUsd, 0);
+  const lsLive = (coins ?? []).filter((c) => c.leverage).length;
+
   const head = (label: string, asc: SortKey, desc: SortKey) => (
     <button type="button" className={sort === asc || sort === desc ? "on" : ""} onClick={() => pick(sort === desc ? asc : desc)}>
       {label} {sort === desc ? "↓" : sort === asc ? "↑" : ""}
@@ -105,21 +111,18 @@ function Discover() {
 
   return (
     <main className="page">
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 22, letterSpacing: "-.01em" }}>
-            Every coin has two sides.
-          </h1>
-          <div className="muted" style={{ fontSize: 13, margin: "2px 0 4px" }}>Launch for 0.03 SOL. Holders earn SOL every 15 min. Long or short any coin.</div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            {coins ? `${coins.length} coins launched` : "Loading coins…"}
-            {q && <> · results for “{q}” · <Link href="/">clear</Link></>}
-          </div>
+      <h1 className="sr">Discover coins</h1>
+      <div className="statbar">
+        <div className="statbar-stats">
+          <div className="stat"><span>Coins launched</span><span>{coins ? coins.length.toLocaleString() : "—"}</span></div>
+          <div className="stat"><span>Total liquidity</span><span>{coins ? `${totalLiq.toFixed(2)} SOL` : "—"}</span></div>
+          <div className="stat"><span>Combined market cap</span><span>{coins ? usd(totalMc) : "—"}</span></div>
+          <div className="stat"><span>Long/short live on</span><span>{coins ? `${lsLive} coins` : "—"}</span></div>
+          <div className="stat"><span>Holder rewards</span><span>Every 15 min</span></div>
         </div>
-        <Link href="/launch" className="cta" style={{ width: "auto", minHeight: 38, padding: "0 18px", display: "inline-flex", alignItems: "center", textDecoration: "none" }}>
-          <Icon name="rocket" size={16} />Launch a coin
-        </Link>
+        <Link href="/launch" className="cta" style={{ width: "auto", minHeight: 40, padding: "0 20px", textDecoration: "none" }}>Launch a coin</Link>
       </div>
+      {q && <div className="muted" style={{ fontSize: 12 }}>Results for “{q}” · <Link href="/">clear</Link></div>}
       {error && <p className="msg-err">{error}</p>}
 
       <section className="panel" style={{ minWidth: 0 }}>
