@@ -9,6 +9,7 @@ import { age, price, usd } from "@/lib/format";
 import { tierFor } from "@/lib/tiers";
 import { useCoins } from "@/lib/useCoins";
 import type { Coin } from "@/lib/coins";
+import { Icon } from "@/components/Icon";
 
 const SORTS = {
   new: { label: "Newest", fn: (a: Coin, b: Coin) => a.ageSeconds - b.ageSeconds },
@@ -116,7 +117,7 @@ function Discover() {
           </div>
         </div>
         <Link href="/launch" className="cta" style={{ width: "auto", minHeight: 38, padding: "0 18px", display: "inline-flex", alignItems: "center", textDecoration: "none" }}>
-          Launch a coin
+          <Icon name="rocket" size={16} />Launch a coin
         </Link>
       </div>
       {error && <p className="msg-err">{error}</p>}

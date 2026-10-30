@@ -16,6 +16,7 @@ import { LEVERAGE_ENABLED, explorer } from "@/lib/config";
 import { age, price, short, usd } from "@/lib/format";
 import { tierFor } from "@/lib/tiers";
 import type { Coin } from "@/lib/coins";
+import { Icon } from "@/components/Icon";
 
 type Mode = "buy" | "sell" | "lev";
 
@@ -86,10 +87,10 @@ export default function CoinPage() {
             </div>
             <div className="muted" style={{ fontSize: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <CopyButton value={coin.mint} />
-              <a href={explorer("address", coin.mint)} target="_blank" rel="noreferrer">Solscan</a>
-              {coin.links.website && <a href={coin.links.website} target="_blank" rel="noreferrer nofollow">Website</a>}
+              <a href={explorer("address", coin.mint)} target="_blank" rel="noreferrer">Solscan <Icon name="external" size={12} /></a>
+              {coin.links.website && <a href={coin.links.website} target="_blank" rel="noreferrer nofollow"><Icon name="globe" size={13} /> Website</a>}
               {coin.links.twitter && <a href={coin.links.twitter} target="_blank" rel="noreferrer nofollow">X</a>}
-              {coin.links.telegram && <a href={coin.links.telegram} target="_blank" rel="noreferrer nofollow">Telegram</a>}
+              {coin.links.telegram && <a href={coin.links.telegram} target="_blank" rel="noreferrer nofollow"><Icon name="send" size={13} /> Telegram</a>}
               <span>{age(coin.ageSeconds)} old</span>
               <span>by <span className="mono">{short(coin.creator)}</span></span>
             </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PublicKey } from "@solana/web3.js";
 import { BRAND, DBC_CONFIG, LAUNCH_FEE_SOL, LEVERAGE_ENABLED, LEVERAGE_PROGRAM, NETWORK, explorer } from "@/lib/config";
 import { TIERS } from "@/lib/tiers";
+import { Icon } from "@/components/Icon";
 
 export const metadata = { title: "Docs" };
 
@@ -39,10 +40,10 @@ export default function Docs() {
           go long or short any coin, with wins paid in SOL without moving the chart.
         </p>
         <div className="cards">
-          <div className="card"><span className="big">{LAUNCH_FEE_SOL} SOL</span><span>to launch a coin</span></div>
-          <div className="card"><span className="big">1%</span><span>of every trade paid to holders in SOL, every 15 min</span></div>
-          <div className="card"><span className="big">90%</span><span>fee on snipers in the launch block</span></div>
-          <div className="card"><span className="big">up to 10x</span><span>long or short, paid from an on-chain vault</span></div>
+          <div className="card"><span className="ic"><Icon name="rocket" /></span><span className="big">{LAUNCH_FEE_SOL} SOL</span><span>to launch a coin</span></div>
+          <div className="card"><span className="ic"><Icon name="coins" /></span><span className="big">1%</span><span>of every trade paid to holders in SOL, every 15 min</span></div>
+          <div className="card"><span className="ic"><Icon name="shield" /></span><span className="big">90%</span><span>fee on snipers in the launch block</span></div>
+          <div className="card"><span className="ic"><Icon name="layers" /></span><span className="big">up to 10x</span><span>long or short, paid from an on-chain vault</span></div>
         </div>
         {devnet && (
           <div className="callout warn">

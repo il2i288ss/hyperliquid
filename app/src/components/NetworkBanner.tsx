@@ -28,7 +28,7 @@ export function NetworkBanner() {
 
   if (!empty) return null;
   return (
-    <div role="status" style={{ background: "#1f1708", borderBottom: "1px solid #4a3a16", color: "var(--warn)", padding: "10px 20px", fontSize: 13, lineHeight: 1.5 }}>
+    <div role="status" style={{ background: "var(--panel-2)", borderBottom: "1px solid var(--line-strong)", color: "var(--text)", padding: "10px 20px", fontSize: 13, lineHeight: 1.5 }}>
       <b>This is the devnet test site and your wallet has no devnet SOL.</b>{" "}
       In Phantom: Settings → Developer Settings → Testnet Mode → <b>Solana Devnet</b>. Then get free test SOL at{" "}
       <a href="https://faucet.solana.com" target="_blank" rel="noreferrer">faucet.solana.com</a> for{" "}

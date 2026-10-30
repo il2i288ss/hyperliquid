@@ -41,16 +41,16 @@ export function PriceChart({ trades, solUsd }: { trades: Trade[]; solUsd: number
     if (!el.current) return;
     const c = createChart(el.current, {
       autoSize: true,
-      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#869896", fontFamily: "var(--font-mono), monospace" },
-      grid: { vertLines: { color: "#16242a" }, horzLines: { color: "#16242a" } },
-      rightPriceScale: { borderColor: "#1c2c32" },
-      timeScale: { borderColor: "#1c2c32", timeVisible: true, secondsVisible: false },
+      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#8a8a8a", fontFamily: "var(--font-mono), monospace" },
+      grid: { vertLines: { color: "#171717" }, horzLines: { color: "#171717" } },
+      rightPriceScale: { borderColor: "#262626" },
+      timeScale: { borderColor: "#262626", timeVisible: true, secondsVisible: false },
       crosshair: { mode: 1 },
       // Brand watermark behind the candles
-      watermark: { visible: true, text: BRAND.toUpperCase(), fontSize: 64, fontFamily: "Inter, system-ui, sans-serif", fontStyle: "bold", color: "rgba(151, 252, 228, 0.06)", horzAlign: "center", vertAlign: "center" },
+      watermark: { visible: true, text: BRAND.toUpperCase(), fontSize: 64, fontFamily: "Inter, system-ui, sans-serif", fontStyle: "bold", color: "rgba(250, 250, 250, 0.05)", horzAlign: "center", vertAlign: "center" },
     });
     series.current = c.addCandlestickSeries({
-      upColor: "#50d2c1", downColor: "#ed7088", wickUpColor: "#50d2c1", wickDownColor: "#ed7088", borderVisible: false,
+      upColor: "#4ade80", downColor: "#f87171", wickUpColor: "#4ade80", wickDownColor: "#f87171", borderVisible: false,
       priceFormat: { type: "price", precision: 8, minMove: 0.00000001 },
     });
     chart.current = c;

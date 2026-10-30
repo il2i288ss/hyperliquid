@@ -6,6 +6,7 @@ import { tierFor } from "@/lib/tiers";
 import { sol } from "@/lib/format";
 import type { Coin } from "@/lib/coins";
 import type { LeverageState } from "@/lib/useLeverage";
+import { Icon } from "./Icon";
 
 /** How much of the vault this coin can use for longs and shorts right now. */
 export function VaultCard({ coin, lev }: { coin: Coin; lev: LeverageState }) {
@@ -35,8 +36,8 @@ export function VaultCard({ coin, lev }: { coin: Coin; lev: LeverageState }) {
   return (
     <section className="panel pad" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-        <h2>Long/short vault</h2>
-        <a href={explorer("address", vaultPda().toBase58())} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>View on Solscan</a>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name="lock" />Long/short vault</h2>
+        <a href={explorer("address", vaultPda().toBase58())} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>Solscan <Icon name="external" size={12} /></a>
       </div>
       <div className="rows" style={{ borderTop: 0, paddingTop: 0 }}>
         <div><span>Vault balance</span><span>{sol(lev.vaultTotal, 2)}</span></div>

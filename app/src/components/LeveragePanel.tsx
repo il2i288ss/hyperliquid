@@ -10,6 +10,7 @@ import { TEST_HOLD_SECS, tierFor } from "@/lib/tiers";
 import { parseUsd, price, sol, usd } from "@/lib/format";
 import type { Coin } from "@/lib/coins";
 import type { LeverageState } from "@/lib/useLeverage";
+import { Icon } from "./Icon";
 
 const DEGEN_MIN_POOL = { real: 20, test: 0.5 };
 const DEGEN_MIN_AGE = { real: 1800, test: 60 };
@@ -116,8 +117,8 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div className="chips" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }} role="group" aria-label="Direction">
-        <button type="button" className={`chip long${long ? " on" : ""}`} aria-pressed={long} onClick={() => setLong(true)} style={{ fontFamily: "var(--sans)", fontSize: 13 }}>Long</button>
-        <button type="button" className={`chip short${!long ? " on" : ""}`} aria-pressed={!long} onClick={() => setLong(false)} style={{ fontFamily: "var(--sans)", fontSize: 13 }}>Short</button>
+        <button type="button" className={`chip long${long ? " on" : ""}`} aria-pressed={long} onClick={() => setLong(true)} style={{ fontFamily: "var(--sans)", fontSize: 13, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Icon name="up" size={15} />Long</button>
+        <button type="button" className={`chip short${!long ? " on" : ""}`} aria-pressed={!long} onClick={() => setLong(false)} style={{ fontFamily: "var(--sans)", fontSize: 13, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Icon name="down" size={15} />Short</button>
       </div>
 
       <label className="field">

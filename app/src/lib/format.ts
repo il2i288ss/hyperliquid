@@ -25,11 +25,11 @@ export const age = (seconds: number) => {
 export const short = (addr: string) => `${addr.slice(0, 4)}…${addr.slice(-4)}`;
 
 const TINTS = [
-  ["#2a2f5a", "#b7c7ff"],
-  ["#3a2a16", "#f5c77a"],
-  ["#123128", "#7fe0b8"],
-  ["#3a1a22", "#f49aa6"],
-  ["#22283a", "#afc2e0"],
+  ["#171717", "#fafafa"],
+  ["#262626", "#e5e5e5"],
+  ["#373737", "#fafafa"],
+  ["#0a0a0a", "#d4d4d4"],
+  ["#525252", "#fafafa"],
 ];
 /** Stable avatar colors per coin. */
 export const tint = (key: string) => {
