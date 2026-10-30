@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 import { BRAND, DBC_CONFIG, LAUNCH_FEE_SOL, LEVERAGE_ENABLED, LEVERAGE_PROGRAM, NETWORK, explorer } from "@/lib/config";
 import { TIERS } from "@/lib/tiers";
 
-export const metadata = { title: `Docs · ${BRAND}` };
+export const metadata = { title: "Docs" };
 
 const TREASURY = "GCHZXtrG8dF8n7KNgcxWGR4QpCBhf71ZBgrQDeKroUi6";
 const VAULT = PublicKey.findProgramAddressSync([Buffer.from("vault")], LEVERAGE_PROGRAM)[0].toBase58();

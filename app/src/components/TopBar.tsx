@@ -12,11 +12,15 @@ const WalletButton = dynamic(
   { ssr: false },
 );
 
-export function Logo() {
+/** Obverse mark: one coin, two sides (long mint, short red). */
+export function Logo({ size = 24 }: { size?: number }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-      <path d="M3 16 L9 6 L13 12 L19 4" fill="none" stroke="#97FCE4" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M3 19 H19" stroke="#ED7088" strokeWidth="2" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2 A10 10 0 0 0 12 22 Z" fill="#50D2C1" />
+      <path d="M12 2 A10 10 0 0 1 12 22 Z" fill="#ED7088" />
+      <circle cx="12" cy="12" r="10" fill="none" stroke="#0F1A1F" strokeWidth="1.2" />
+      <circle cx="12" cy="12" r="6.2" fill="none" stroke="#0F1A1F" strokeWidth="1.4" opacity=".55" />
+      <path d="M12 2 V22" stroke="#0F1A1F" strokeWidth="1.6" />
     </svg>
   );
 }

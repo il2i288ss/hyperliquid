@@ -15,7 +15,8 @@ export const LEVERAGE_ENABLED = (process.env.NEXT_PUBLIC_LEVERAGE ?? (process.en
 /** Used only when the long/short program has no SOL/USD rate set yet. */
 export const FALLBACK_SOL_USD = Number(process.env.NEXT_PUBLIC_SOL_USD ?? "150");
 
-export const BRAND = process.env.NEXT_PUBLIC_BRAND ?? "LAUNCHPAD";
+export const BRAND = process.env.NEXT_PUBLIC_BRAND ?? "Obverse";
+export const TAGLINE = "Every coin has two sides.";
 
 export const LAUNCH_FEE_SOL = 0.03;
 /** Measured on devnet: rent + network fees for a launch. */

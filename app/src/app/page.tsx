@@ -106,7 +106,10 @@ function Discover() {
     <main className="page">
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 20 }}>Discover</h1>
+          <h1 style={{ margin: 0, fontSize: 22, letterSpacing: "-.01em" }}>
+            Every coin has <span style={{ color: "var(--long)" }}>two</span> <span style={{ color: "var(--short)" }}>sides.</span>
+          </h1>
+          <div className="muted" style={{ fontSize: 13, margin: "2px 0 4px" }}>Launch for 0.03 SOL. Holders earn SOL every 15 min. Long or short any coin.</div>
           <div className="muted" style={{ fontSize: 12 }}>
             {coins ? `${coins.length} coins launched` : "Loading coins…"}
             {q && <> · results for “{q}” · <Link href="/">clear</Link></>}
