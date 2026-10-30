@@ -39,10 +39,14 @@ MAXLEN=$(( SIZE * 5 / 4 ))   # 25% room for future upgrades
 if solana program show "$PROGRAM_ID" -u "$RPC" >/dev/null 2>&1; then
   echo "Program already deployed: $PROGRAM_ID"
 else
-  NEED=$(solana rent $((MAXLEN + 45)) -u "$RPC" | awk '/Rent-exempt minimum/ {print $3 + 0.15}')
+  # Upload buffer (refunded right after deploy) + the program's own rent.
+  BUF=$(solana rent $((SIZE + 37)) -u "$RPC" | awk '/Rent-exempt minimum/ {print $3}')
+  PRG=$(solana rent $((MAXLEN + 45)) -u "$RPC" | awk '/Rent-exempt minimum/ {print $3}')
+  NEED=$(awk "BEGIN {printf \"%.2f\", $BUF + $PRG + 0.15}")
   echo
-  echo "Deploying needs about $NEED SOL in the fee bot: $FEE_BOT"
-  echo "(That SOL is rent: it stays locked in the program and can be taken back later by closing it.)"
+  echo "Deploying needs $NEED SOL in the fee bot: $FEE_BOT"
+  echo "About $BUF SOL comes straight back to the fee bot when the upload finishes."
+  echo "The other ~$PRG SOL is rent locked in the program (recoverable by closing it later)."
   npx tsx src/wait-balance.ts "$FEE_BOT" "$NEED"
   echo "Deploying (takes 1–3 minutes)…"
   solana program deploy "$P/leverage.so" --program-id "$P/program-keypair.json" --max-len "$MAXLEN" \
