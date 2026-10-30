@@ -10,15 +10,17 @@
 import { PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import BN from "bn.js";
 import fs from "node:fs";
-import { connection, dbc, loadKeypair, pubkey } from "./env.js";
-import { SPLIT_BPS } from "./platform.js";
+import { connection, dbc, loadKeypair, pubkey, pubkeyOr } from "./env.js";
+import { SPLIT_BPS, TREASURY_ADDRESS } from "./platform.js";
 import { addHoldersDue, addLaunchFees } from "./rewards/store.js";
 
 const U64_MAX = new BN("18446744073709551615");
 
 export async function claimFees(isMain = process.argv.includes("--main")) {
-  const claimer = loadKeypair(isMain ? "TEAM_KEYPAIR" : "FEE_SPLITTER_KEYPAIR");
-  const receiver = isMain ? pubkey("TEAM_WALLET") : pubkey("FEE_SPLITTER_WALLET");
+  // Platform coins: fees go to the fee bot, which splits them.
+  // Main coin: fees go straight to the treasury.
+  const claimer = loadKeypair("FEE_SPLITTER_KEYPAIR");
+  const receiver = isMain ? pubkeyOr("TEAM_WALLET", TREASURY_ADDRESS) : pubkey("FEE_SPLITTER_WALLET");
   const fromEnv = isMain ? process.env.MAIN_COIN_CONFIG : process.env.PLATFORM_CONFIG;
   const deployments = fs.existsSync("deployments.json") ? JSON.parse(fs.readFileSync("deployments.json", "utf8")) : {};
   const address = fromEnv ?? (isMain ? deployments.mainCoinConfig : deployments.platformConfig);

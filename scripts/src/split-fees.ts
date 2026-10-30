@@ -15,8 +15,8 @@ import {
   Transaction,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { connection, loadKeypair, pubkey } from "./env.js";
-import { splitLamports } from "./platform.js";
+import { connection, loadKeypair, pubkey, pubkeyOr } from "./env.js";
+import { splitLamports, TREASURY_ADDRESS } from "./platform.js";
 import { consumeLaunchFees, peekLaunchFees } from "./rewards/store.js";
 
 const KEEP_FOR_TX_FEES = 10_000_000n; // keep 0.01 SOL for claim tx fees
@@ -39,7 +39,7 @@ export async function splitFees() {
       tx.add(SystemProgram.transfer({ fromPubkey: splitter.publicKey, toPubkey: to, lamports }));
   };
   add(pubkey("HOLDER_POT_WALLET"), parts.holders);
-  add(pubkey("TREASURY_WALLET"), parts.treasury);
+  add(pubkeyOr("TREASURY_WALLET", TREASURY_ADDRESS), parts.treasury);
   // Vault PDA from the leverage program. Anyone can send SOL in;
   // only the program can pay it out, and only to winning positions.
   add(pubkey("LEVERAGE_VAULT_PDA"), parts.vault);

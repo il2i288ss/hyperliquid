@@ -4,6 +4,13 @@
 export const LAMPORTS_PER_SOL = 1_000_000_000;
 
 /**
+ * Where everything the platform earns goes: the 0.1% treasury share of
+ * trading fees, every launch fee, and the main coin's fees.
+ * TREASURY_WALLET / TEAM_WALLET env vars override it.
+ */
+export const TREASURY_ADDRESS = "GCHZXtrG8dF8n7KNgcxWGR4QpCBhf71ZBgrQDeKroUi6";
+
+/**
  * Launch fee charged by the Meteora config when a coin is created.
  * Meteora keeps 10% (PROTOCOL_POOL_CREATION_FEE_PERCENT), so the platform
  * nets 0.027 SOL per launch.

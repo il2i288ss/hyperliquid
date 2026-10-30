@@ -104,7 +104,9 @@ export function curveConfig(
 
 async function main() {
   const admin = loadKeypair("ADMIN_KEYPAIR");
-  const feeClaimer = isMain ? pubkey("TEAM_WALLET") : pubkey("FEE_SPLITTER_WALLET");
+  // The fee bot claims for both configs (it must sign claims). For the main
+  // coin it sends everything straight to the treasury (see claim-fees.ts).
+  const feeClaimer = pubkey("FEE_SPLITTER_WALLET");
   const config = Keypair.generate();
 
   const tx = await dbc.partner.createConfig({

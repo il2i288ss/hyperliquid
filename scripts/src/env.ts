@@ -24,5 +24,7 @@ export const connection = new Connection(required("RPC_URL"), "confirmed");
 export const dbc = DynamicBondingCurveClient.create(connection, "confirmed");
 
 export const pubkey = (name: string) => new PublicKey(required(name));
+/** An address from the env, or the given default. */
+export const pubkeyOr = (name: string, fallback: string) => new PublicKey(process.env[name] || fallback);
 export const optionalPubkey = (name: string) =>
   process.env[name] ? new PublicKey(process.env[name]!) : undefined;
