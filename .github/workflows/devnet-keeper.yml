@@ -29,8 +29,8 @@ jobs:
           DEVNET_KEYPAIR: ${{ secrets.DEVNET_KEYPAIR }}
         run: |
           printf '%s' "$DEVNET_KEYPAIR" > "$ADMIN_KEYPAIR"; chmod 600 "$ADMIN_KEYPAIR"
-          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.6
           git clone -q --depth 1 -b devnet-state "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/state
+          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.6 2>&1 | tee /tmp/state/wallet.txt; test "${PIPESTATUS[0]}" -eq 0
           git clone -q --depth 1 -b devnet-program "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/program || true
           ID="$(cat /tmp/program/program-id.txt 2>/dev/null || cat /tmp/state/leverage-program-id.txt)"
           echo "LEVERAGE_PROGRAM_ID=$ID" >> "$GITHUB_ENV"
@@ -44,6 +44,7 @@ jobs:
         if: always()
         run: |
           cp keeper-result.json /tmp/state/ 2>/dev/null || true
+          [ -d /tmp/state/.git ] || exit 0
           cd /tmp/state
           git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
           git add -A && git commit -q -m "devnet keeper ${GITHUB_SHA}" || true
