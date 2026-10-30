@@ -22,18 +22,23 @@ launchpad/
 
 ## Status
 
+[![CI](https://github.com/il2i288ss/hyperliquid/actions/workflows/ci.yml/badge.svg)](https://github.com/il2i288ss/hyperliquid/actions/workflows/ci.yml)
+
+Every push is built and tested on GitHub (scripts tests + typecheck,
+website production build, program compile + tests).
+
 | Part | State |
 |---|---|
-| Fee split, holder reward math, leverage math | Done and unit-tested |
-| Meteora config / claim / launch / swap code | Written; **not yet run** (see "VERIFY" below) |
-| Website: launch + buy/sell | Written; needs `npm install` + devnet test |
-| Holder SOL airdrops | Written (snapshots every 15 min, payout hourly, crash-safe) |
-| Long/short program | Written; needs `anchor build`, Meteora byte offsets, devnet tests |
-| Indexer, charts, coin list, long/short UI, keeper bots | Phase 2 |
+| Fee split, holder rewards, leverage math | Unit-tested in CI |
+| Meteora config / claim / launch / swap | Typechecked against the real SDK (1.5.13) in CI; not yet run on devnet |
+| Website: launch + buy/sell | Production build passes in CI; not yet run on devnet |
+| Long/short program | Compiles in CI; reads Meteora DBC pools (offsets from IDL); not yet deployed |
+| Graduated-coin (DAMM v2) price reads | Not configured yet (phase 2) |
+| Postgres, on-chain fee splitter, indexer, full UI, keepers | Next |
 
-The build sandbox had no access to npm or crates.io, so the SDK calls could not
-be compiled there. Every line that depends on the exact Meteora SDK or account
-layout is marked `VERIFY`. Search for it: `grep -rn VERIFY .`
+Meteora facts confirmed from the SDK: 20% of trading fees and 10% of each
+launch fee go to Meteora (so a 0.03 SOL launch nets 0.027 SOL), max fee is 99%,
+and `poolCreationFee` is set in SOL.
 
 ## Setup (devnet first)
 
