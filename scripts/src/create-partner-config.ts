@@ -66,7 +66,9 @@ export function curveConfig(
       },
       dynamicFeeEnabled: false,
       collectFeeMode: CollectFeeMode.QuoteToken, // all fees in SOL
-      creatorTradingFeePercentage: 0, // 100% of the non-Meteora fee -> partner
+      // Platform coins: 100% of the non-Meteora fee -> partner (split to holders/vault).
+      // Main coin: 100% -> the wallet that launched it.
+      creatorTradingFeePercentage: main ? 100 : 0,
       poolCreationFee: main ? 0 : LAUNCH_FEE_SOL,
       // The creator's first buy inside the launch tx pays the normal fee.
       enableFirstSwapWithMinFee: true,
@@ -82,11 +84,12 @@ export function curveConfig(
         poolFeeBps,
       },
     },
-    // All LP goes to the platform and is locked forever; fees stay claimable.
+    // All LP is locked forever; fees stay claimable.
     liquidityDistribution: {
-      partnerPermanentLockedLiquidityPercentage: 100,
+      // Main coin: the locked LP (and its fees after graduation) belongs to the launcher.
+      partnerPermanentLockedLiquidityPercentage: main ? 0 : 100,
       partnerLiquidityPercentage: 0,
-      creatorPermanentLockedLiquidityPercentage: 0,
+      creatorPermanentLockedLiquidityPercentage: main ? 100 : 0,
       creatorLiquidityPercentage: 0,
     },
     lockedVesting: {
