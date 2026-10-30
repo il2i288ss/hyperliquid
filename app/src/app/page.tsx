@@ -93,9 +93,6 @@ function Discover() {
     [coins, q, sort],
   );
 
-  const totalLiq = (coins ?? []).reduce((a, c) => a + c.quoteReserveSol, 0);
-  const totalMc = (coins ?? []).reduce((a, c) => a + c.mcapUsd, 0);
-  const lsLive = (coins ?? []).filter((c) => c.leverage).length;
 
   const head = (label: string, asc: SortKey, desc: SortKey) => (
     <button type="button" className={sort === asc || sort === desc ? "on" : ""} onClick={() => pick(sort === desc ? asc : desc)}>
@@ -117,15 +114,6 @@ function Discover() {
           </div>
         </div>
       </section>
-      <div className="statbar">
-        <div className="statbar-stats">
-          <div className="stat"><span>Coins launched</span><span>{coins ? coins.length.toLocaleString() : "—"}</span></div>
-          <div className="stat"><span>Total liquidity</span><span>{coins ? `${totalLiq.toFixed(2)} SOL` : "—"}</span></div>
-          <div className="stat"><span>Combined market cap</span><span>{coins ? usd(totalMc) : "—"}</span></div>
-          <div className="stat"><span>Long/short live on</span><span>{coins ? `${lsLive} coins` : "—"}</span></div>
-          <div className="stat"><span>Holder rewards</span><span>Every 15 min</span></div>
-        </div>
-      </div>
       {q && <div className="muted" style={{ fontSize: 12 }}>Results for “{q}” · <Link href="/">clear</Link></div>}
       {error && <p className="msg-err">{error}</p>}
 
