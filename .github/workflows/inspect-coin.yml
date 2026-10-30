@@ -1,0 +1,33 @@
+name: Inspect coin (mainnet, read-only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mint:
+        description: Coin mint address
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: scripts } }
+    env:
+      RPC_URL: ${{ vars.MAINNET_RPC_URL || 'https://api.mainnet-beta.solana.com' }}
+      MINT: ${{ inputs.mint }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npx tsx src/inspect-coin.ts 2>&1 | tee /tmp/inspect.txt
+      - name: Publish
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cp /tmp/inspect.txt "/tmp/out/${MINT}.txt" || true
+          cd /tmp/out && git init -q -b inspect
+          git config user.name ci && git config user.email ci@users.noreply.github.com
+          git add -A && git commit -q -m "inspect ${MINT}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" HEAD:inspect
