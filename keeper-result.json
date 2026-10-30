@@ -3,8 +3,23 @@
   "checks": [
     {
       "name": "keeper registered demo coin",
-      "ok": false,
-      "detail": "no market account"
+      "ok": true,
+      "detail": "5xRohA6Yk3AcnimHjVGDD2HPdppeDPkPVfX8e8FLf8Qo"
+    },
+    {
+      "name": "long/short enabled",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "keeper recorded prices",
+      "ok": true,
+      "detail": "10 observations"
+    },
+    {
+      "name": "pool SOL tracked",
+      "ok": true,
+      "detail": "0.28875 SOL"
     }
   ]
 }

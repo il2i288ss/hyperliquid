@@ -2,6 +2,7 @@
 > keeper
 > tsx src/keeper/index.ts
 
-2026-10-30T09:49:34.745Z [keeper] starting as 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr · rewards off
-[keeper/markets] code 3012
-[keeper/markets] code 3012
+2026-10-30T09:52:24.178Z [keeper] starting as 8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr · rewards off
+2026-10-30T09:52:26.015Z [markets] registered Cawen8n9mNJB7vh8ipaYBvgjTaWfp6uugsZhFjHhWbwf (0.29 SOL in pool)
+2026-10-30T09:52:26.015Z [markets] 1 coins, 1 with long/short (min pool 0.25 SOL)
+2026-10-30T09:53:26.425Z [markets] 1 coins, 1 with long/short (min pool 0.25 SOL)
