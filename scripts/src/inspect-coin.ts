@@ -7,13 +7,15 @@
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { deriveDbcPoolAddress } from "@meteora-ag/dynamic-bonding-curve-sdk";
+import bs58 from "bs58";
 import { connection, dbc } from "./env.js";
 import { TREASURY_ADDRESS } from "./platform.js";
 
 const mint = new PublicKey(process.env.MINT!);
 const CONFIGS: Record<string, string> = {
   platform: "BL4RJziEMjC7aTv4pHdjm5eWB7KZKMYK3AM3jVkHLihe",
-  "main coin": "GpESQwWJgHsmWfk2sD28GzZt2xZLMeT2WKhBiqnBevCL",
+  "main coin (old)": "GpESQwWJgHsmWfk2sD28GzZt2xZLMeT2WKhBiqnBevCL",
+  "main coin": "4eum1BgtpwPp9HtGSbaE2Xyq3zJeV5k8sYg8EskVk6Gh",
 };
 const WALLETS: Record<string, string> = {
   treasury: TREASURY_ADDRESS,
@@ -73,9 +75,52 @@ for (const [label, cfg] of Object.entries(CONFIGS)) {
   const fees = await dbc.state.getPoolFeeMetrics(pool).catch((e: Error) => `fee metrics error: ${e.message}`);
   console.log("\n== Fees waiting in the pool ==\n" + JSON.stringify(plain(fees), null, 2));
 
-  const sigs = await connection.getSignaturesForAddress(pool, { limit: 50 });
-  console.log(`\n== Pool transactions (${sigs.length}, newest first) ==`);
-  for (const x of sigs) console.log(`${x.blockTime ? new Date(x.blockTime * 1000).toISOString() : "?"} ${x.err ? "FAILED" : "ok"} ${x.signature}`);
+  // Every swap's fee, from Meteora's own swap event, grouped by slot so the
+  // launch-block (90% sniper fee) trades stand out.
+  const all: Awaited<ReturnType<typeof connection.getSignaturesForAddress>> = [];
+  let before: string | undefined;
+  for (;;) {
+    const page = await connection.getSignaturesForAddress(pool, { limit: 1000, before });
+    all.push(...page);
+    if (page.length < 1000 || all.length >= 5000) break;
+    before = page[page.length - 1].signature;
+  }
+  const ok = all.filter((x) => !x.err).reverse(); // oldest first
+  const EVT2 = Buffer.from([189, 66, 51, 168, 38, 80, 117, 153]);
+  const EVT1 = Buffer.from([27, 60, 21, 213, 138, 170, 187, 147]);
+  const launchSlot = ok[0]?.slot;
+  let feesLaunch = 0n, protoLaunch = 0n, feesLater = 0n, protoLater = 0n, nLaunch = 0, nLater = 0, inLaunch = 0n;
+  const rows: string[] = [];
+  for (let i = 0; i < ok.length; i += 50) {
+    const txs = await connection.getTransactions(ok.slice(i, i + 50).map((x) => x.signature), { maxSupportedTransactionVersion: 0 });
+    txs.forEach((tx, j) => {
+      if (!tx?.meta) return;
+      const datas: Buffer[] = [];
+      for (const l of tx.meta.logMessages ?? []) if (l.startsWith("Program data: ")) datas.push(Buffer.from(l.slice(14), "base64"));
+      for (const inner of tx.meta.innerInstructions ?? []) for (const ix of inner.instructions) { try { datas.push(Buffer.from(bs58.decode(ix.data))); } catch { /* skip */ } }
+      for (const d of datas) {
+        for (let k = 0; k + 8 <= d.length; k++) {
+          const disc = d.subarray(k, k + 8);
+          const v2 = disc.equals(EVT2), v1 = disc.equals(EVT1);
+          if (!v2 && !v1) continue;
+          const b = d.subarray(k + 8);
+          if (!b.subarray(0, 32).equals(pool.toBuffer())) continue;
+          const dir = b[64]; // 1 = buy (SOL in), 0 = sell
+          const fee = b.readBigUInt64LE(v2 ? 131 : 114), proto = b.readBigUInt64LE(v2 ? 139 : 122);
+          const amountIn = b.readBigUInt64LE(v2 ? 83 : 82);
+          const slot = ok[i + j].slot;
+          if (slot === launchSlot) { feesLaunch += fee; protoLaunch += proto; nLaunch++; if (dir === 1) inLaunch += amountIn; }
+          else { feesLater += fee; protoLater += proto; nLater++; }
+          if (rows.length < 40) rows.push(`slot ${slot}${slot === launchSlot ? " (LAUNCH)" : ""} ${dir === 1 ? "buy " : "sell"} in=${dir === 1 ? sol(amountIn) + " SOL" : amountIn.toString() + " raw tokens"} fee=${sol(fee)} SOL meteora=${sol(proto)} SOL ${ok[i + j].signature.slice(0, 12)}…`);
+          k = d.length;
+        }
+      }
+    });
+  }
+  console.log(`\n== Swaps and fees (${ok.length} ok transactions) ==`);
+  rows.forEach((r) => console.log(r));
+  console.log(`\nlaunch block: ${nLaunch} swaps, ${sol(inLaunch)} SOL bought, fee to coin ${sol(feesLaunch)} SOL, meteora ${sol(protoLaunch)} SOL`);
+  console.log(`after launch: ${nLater} swaps, fee to coin ${sol(feesLater)} SOL, meteora ${sol(protoLater)} SOL`);
 }
 
 console.log("\n== Platform wallets ==");
