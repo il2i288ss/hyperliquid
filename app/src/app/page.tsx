@@ -110,8 +110,8 @@ export default function LaunchPage() {
           <div style={{ margin: "14px 0" }}>
             <div className="kv"><span>Launch fee</span><b className="mono">{LAUNCH_FEE_SOL} SOL</b></div>
             <div className="kv"><span>First buy</span><b className="mono">{buy} SOL</b></div>
-            <div className="kv"><span>Network + rent (approx.)</span><b className="mono">~0.01 SOL</b></div>
-            <div className="kv"><span>Total</span><b className="mono">~{(LAUNCH_FEE_SOL + buy + 0.01).toFixed(3)} SOL</b></div>
+            <div className="kv"><span>Network + rent (approx.)</span><b className="mono">~0.025 SOL</b></div>
+            <div className="kv"><span>Total</span><b className="mono">~{(LAUNCH_FEE_SOL + buy + 0.025).toFixed(3)} SOL</b></div>
           </div>
 
           <button className="btn" disabled={!!publicKey && !ready} onClick={launch}>

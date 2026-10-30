@@ -30,9 +30,9 @@ website production build, program compile + tests).
 | Part | State |
 |---|---|
 | Fee split, holder rewards, leverage math | Unit-tested in CI |
-| Meteora config / claim / launch / swap | Typechecked against the real SDK (1.5.13) in CI; not yet run on devnet |
+| Meteora config / claim / launch / swap | **Passing on devnet** (Actions → "Devnet test"): 90% launch-slot fee, 3.75% after, buy, sell, fee claim, 0.027 SOL launch fee claim |
 | Website: launch + buy/sell | Production build passes in CI; not yet run on devnet |
-| Long/short program | Compiles in CI; reads Meteora DBC pools (offsets from IDL); not yet deployed |
+| Long/short program | Builds for Solana in CI (315 KB); reads Meteora DBC pools; not yet deployed (needs ~4.5 devnet SOL during deploy) |
 | Graduated-coin (DAMM v2) price reads | Not configured yet (phase 2) |
 | Postgres, on-chain fee splitter, indexer, full UI, keepers | Next |
 
