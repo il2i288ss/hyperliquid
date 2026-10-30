@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { closePositionIx, leverageError, setTriggersIx, type Position } from "@/lib/leverage";
+import { botPost, closePositionIx, leverageError, setTriggersIx, signAction, type Position } from "@/lib/leverage";
 import { TEST_HOLD_SECS, TIERS } from "@/lib/tiers";
-import { explorer } from "@/lib/config";
+import { LEVERAGE_MODE, LS_API, explorer } from "@/lib/config";
 import { parseUsd, price, usd } from "@/lib/format";
 import type { Coin } from "@/lib/coins";
 
@@ -16,7 +16,7 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
   coin: Coin; positions: Position[]; solUsd: number; testBuild: boolean; onDone: () => void;
 }) {
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, sendTransaction, signMessage } = useWallet();
   const [now, setNow] = useState(() => Date.now() / 1000);
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState<{ ok?: string; err?: string; sig?: string }>({});
@@ -31,9 +31,16 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
   if (!positions.length) return <p className="empty">No open positions on ${coin.symbol}.</p>;
 
   async function close(p: Position) {
-    setBusy(p.address.toBase58());
+    setBusy(p.id ?? p.address.toBase58());
     setMsg({});
     try {
+      if (LEVERAGE_MODE === "bot") {
+        const { message, signature } = await signAction(signMessage, `Obverse: close ${p.id}`);
+        const r = await botPost(LS_API, "/ls/close", { owner: publicKey!.toBase58(), id: p.id, message, signature });
+        setMsg({ ok: `Closed. ${(Number(r.payout) / 1e9).toFixed(4)} SOL is on its way to your wallet.` });
+        onDone();
+        return;
+      }
       const tx = new Transaction().add(closePositionIx(publicKey!, new PublicKey(coin.mint), p.nonce));
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction(sig, "confirmed");
@@ -57,9 +64,17 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
       sl && (p.long ? sl >= mc : sl <= mc) ? `Stop loss must be ${p.long ? "below" : "above"} the current market cap (${usd(mc)}).` :
       "";
     if (bad) return setMsg({ err: bad });
-    setBusy(p.address.toBase58());
+    setBusy(p.id ?? p.address.toBase58());
     setMsg({});
     try {
+      if (LEVERAGE_MODE === "bot") {
+        const { message, signature } = await signAction(signMessage, `Obverse: set TP ${Math.round(tp)} SL ${Math.round(sl)} on ${p.id}`);
+        await botPost(LS_API, "/ls/triggers", { owner: publicKey!.toBase58(), id: p.id, tp: Math.round(tp), sl: Math.round(sl), message, signature });
+        setMsg({ ok: tp || sl ? "Take profit / stop loss saved." : "Take profit / stop loss removed." });
+        setEdit(null);
+        onDone();
+        return;
+      }
       const sig = await sendTransaction(new Transaction().add(setTriggersIx(publicKey!, new PublicKey(coin.mint), p.nonce, sl, tp)), connection);
       await connection.confirmTransaction(sig, "confirmed");
       setMsg({ ok: tp || sl ? "Take profit / stop loss saved." : "Take profit / stop loss removed.", sig });
@@ -90,7 +105,7 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
               const pnl = Math.min(raw, p.margin * (TIERS[p.tier]?.profitCapX ?? 5));
               const hold = testBuild ? TEST_HOLD_SECS : TIERS[p.tier]?.minHoldSecs ?? 60;
               const wait = Math.ceil(p.openedAt + hold - now);
-              const id = p.address.toBase58();
+              const id = p.id ?? p.address.toBase58();
               return (
                 <tr key={id}>
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }} className={p.long ? "up" : "down"}>{p.long ? "Long" : "Short"} {lev}x</td>
@@ -125,7 +140,7 @@ export function PositionsTable({ coin, positions, solUsd, testBuild, onDone }: {
           </tbody>
         </table>
       </div>
-      {msg.ok && <p className="msg-ok" style={{ padding: "0 14px 12px" }}>{msg.ok} <a href={explorer("tx", msg.sig!)} target="_blank" rel="noreferrer">View transaction</a></p>}
+      {msg.ok && <p className="msg-ok" style={{ padding: "0 14px 12px" }}>{msg.ok} {msg.sig && <a href={explorer("tx", msg.sig)} target="_blank" rel="noreferrer">View transaction</a>}</p>}
       {msg.err && <p className="msg-err" role="alert" style={{ padding: "0 14px 12px" }}>{msg.err}</p>}
       <p className="note" style={{ padding: "0 14px 12px" }}>PnL shown at the current spot price. The actual payout uses the averaged price and includes price impact and the close fee.</p>
     </div>

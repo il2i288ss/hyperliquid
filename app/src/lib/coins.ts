@@ -7,7 +7,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { DynamicBondingCurveClient } from "@meteora-ag/dynamic-bonding-curve-sdk";
 import bs58 from "bs58";
-import { DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_ENABLED, LEVERAGE_PROGRAM, RPC_URL, TOTAL_SUPPLY } from "./config";
+import { DBC_CONFIG, FALLBACK_SOL_USD, LEVERAGE_ENABLED, LEVERAGE_MODE, LEVERAGE_PROGRAM, LS_API, RPC_URL, TOTAL_SUPPLY } from "./config";
 import { decodeGlobal, decodeMarket, globalPda } from "./leverage";
 
 const MARKET_DISC = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154]);
@@ -146,7 +146,7 @@ export async function listCoins(): Promise<Coin[]> {
     dbc.state.getPoolConfig(DBC_CONFIG),
     connection.getSlot(),
     solUsd(connection),
-    LEVERAGE_ENABLED
+    LEVERAGE_ENABLED && LEVERAGE_MODE === "chain"
       ? connection
           .getProgramAccounts(LEVERAGE_PROGRAM, { filters: [{ memcmp: { offset: 0, bytes: bs58.encode(MARKET_DISC) } }] })
           .catch(() => [])
@@ -155,6 +155,14 @@ export async function listCoins(): Promise<Coin[]> {
   const enabled = new Set(
     markets.map((m) => decodeMarket(m.account.data as Buffer)).filter((m) => m.enabled).map((m) => m.mint.toBase58()),
   );
+  if (LEVERAGE_MODE === "bot") {
+    try {
+      const r = await fetch(`${LS_API}/ls/markets`, { signal: AbortSignal.timeout(3_000), cache: "no-store" });
+      ((await r.json()).mints as string[]).forEach((m) => enabled.add(m));
+    } catch {
+      /* API down: show no badges rather than fail */
+    }
+  }
   const threshold = config ? toNum(config.migrationQuoteThreshold) : 0;
 
   const mints = pools.map((p) => p.account.poolState.baseMint as PublicKey);

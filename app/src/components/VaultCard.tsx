@@ -1,7 +1,6 @@
 "use client";
 
 import { explorer } from "@/lib/config";
-import { vaultPda } from "@/lib/leverage";
 import { tierFor } from "@/lib/tiers";
 import { sol } from "@/lib/format";
 import type { Coin } from "@/lib/coins";
@@ -14,7 +13,7 @@ export function VaultCard({ coin, lev }: { coin: Coin; lev: LeverageState }) {
   const m = lev.market;
   const poolCap = ((m?.poolSol ?? coin.quoteReserveSol) * tier.oiCapPctOfPool) / 100;
   const vaultCap = lev.vaultFree * 0.05;
-  const cap = Math.min(poolCap, vaultCap);
+  const cap = m?.capacity ?? Math.min(poolCap, vaultCap);
   const longUsed = m?.oiLong ?? 0;
   const shortUsed = m?.oiShort ?? 0;
   const side = (label: string, used: number, color: string) => {
@@ -37,7 +36,7 @@ export function VaultCard({ coin, lev }: { coin: Coin; lev: LeverageState }) {
     <section className="panel pad" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
         <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon name="lock" />Long/short vault</h2>
-        <a href={explorer("address", vaultPda().toBase58())} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>Solscan <Icon name="external" size={12} /></a>
+        <a href={explorer("address", lev.vaultAddress)} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>Solscan <Icon name="external" size={12} /></a>
       </div>
       <div className="rows" style={{ borderTop: 0, paddingTop: 0 }}>
         <div><span>Vault balance</span><span>{sol(lev.vaultTotal, 2)}</span></div>
@@ -58,7 +57,11 @@ export function VaultCard({ coin, lev }: { coin: Coin; lev: LeverageState }) {
           <p className="note">Long/short isn&apos;t live on this coin yet. Once it is, up to {sol(cap)} per side can be opened at today&apos;s size.</p>
         )}
       </div>
-      <p className="note">Locked on-chain: nobody can withdraw it. It only pays winning positions, and it&apos;s filled by 1.9% of every trade.</p>
+      <p className="note">
+        {lev.mode === "bot"
+          ? "A public wallet anyone can check on Solscan. It only pays winning positions, automatically, and it's filled by 1.9% of every trade."
+          : "Locked on-chain: nobody can withdraw it. It only pays winning positions, and it's filled by 1.9% of every trade."}
+      </p>
     </section>
   );
 }

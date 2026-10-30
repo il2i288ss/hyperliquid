@@ -111,7 +111,7 @@ export function decodeMarket(data: Buffer) {
   };
 }
 
-export type Position = ReturnType<typeof decodePosition> & { address: PublicKey };
+export type Position = ReturnType<typeof decodePosition> & { address: PublicKey; id?: string; estPayout?: number | null };
 const PRICE_SCALE = 1e12;
 export function decodePosition(data: Buffer) {
   const rd = new Reader(data);
@@ -167,4 +167,32 @@ export function leverageError(e: unknown): string {
     if (name) return FRIENDLY[name] ?? name;
   }
   return txError(e);
+}
+
+// ---------- bot-run long/short (keeper API) ----------
+
+export const MEMO_PROGRAM = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+/** Margin + open fee to the vault, with a memo describing the position. */
+export function botOpenIxs(owner: PublicKey, vault: PublicKey, mint: string, long: boolean, leverage: number, marginLamports: bigint, feeLamports: bigint, tp: number, sl: number) {
+  const memo = `obv:o:${mint}:${long ? "L" : "S"}:${leverage}:${marginLamports}:${Math.round(tp)}:${Math.round(sl)}`;
+  return [
+    SystemProgram.transfer({ fromPubkey: owner, toPubkey: vault, lamports: marginLamports + feeLamports }),
+    new TransactionInstruction({ programId: MEMO_PROGRAM, keys: [{ pubkey: owner, isSigner: true, isWritable: false }], data: Buffer.from(memo, "utf8") }),
+  ];
+}
+
+export async function botPost(api: string, path: string, body: unknown) {
+  const r = await fetch(`${api}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok && r.status !== 202) throw new Error(j.error ?? `Request failed (${r.status})`);
+  return j;
+}
+
+/** Sign "Obverse: <action> at <unix>" with the wallet; returns base58 signature. */
+export async function signAction(signMessage: ((m: Uint8Array) => Promise<Uint8Array>) | undefined, text: string) {
+  if (!signMessage) throw new Error("Your wallet can't sign messages. Try Phantom or Solflare.");
+  const message = `${text} at ${Math.floor(Date.now() / 1000)}`;
+  const sig = await signMessage(new TextEncoder().encode(message));
+  return { message, signature: bs58.encode(sig) };
 }

@@ -4,8 +4,8 @@ import { useState } from "react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { explorer } from "@/lib/config";
-import { leverageError, openPositionIx, setTriggersIx } from "@/lib/leverage";
+import { LEVERAGE_MODE, LS_API, explorer } from "@/lib/config";
+import { botOpenIxs, botPost, leverageError, openPositionIx, setTriggersIx } from "@/lib/leverage";
 import { TEST_HOLD_SECS, tierFor } from "@/lib/tiers";
 import { parseUsd, price, sol, usd } from "@/lib/format";
 import type { Coin } from "@/lib/coins";
@@ -45,7 +45,7 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
   const size = marginSol * lev2;
 
   // Same caps as the program: smaller of % of pool SOL and 5% of free vault.
-  const cap = Math.min((poolSol * tier.oiCapPctOfPool) / 100, lev.vaultFree * 0.05);
+  const cap = lev.market.capacity ?? Math.min((poolSol * tier.oiCapPctOfPool) / 100, lev.vaultFree * 0.05);
   const used = long ? lev.market.oiLong : lev.market.oiShort;
   const left = Math.max(0, cap - used);
 
@@ -96,7 +96,26 @@ export function LeveragePanel({ coin, lev, onDone }: { coin: Coin; lev: Leverage
     try {
       const nonce = BigInt(Date.now());
       const mintKey = new PublicKey(coin.mint);
-      const tx = new Transaction().add(openPositionIx(publicKey, mintKey, nonce, long, BigInt(Math.round(marginSol * 1e9)), lev2));
+      const marginL = BigInt(Math.round(marginSol * 1e9));
+      if (LEVERAGE_MODE === "bot") {
+        // Margin + open fee go to the vault; the engine opens the position
+        // (or refunds it in full if a limit was hit in the meantime).
+        const feeL = (marginL * BigInt(lev2) * 50n) / 10_000n; // 0.5%: the highest tier fee; any excess is refunded
+        const tx = new Transaction().add(...botOpenIxs(publicKey, new PublicKey(lev.vaultAddress), coin.mint, long, lev2, marginL, feeL, tp, sl));
+        const sig = await sendTransaction(tx, connection);
+        await connection.confirmTransaction(sig, "confirmed");
+        const r = await botPost(LS_API, "/ls/open", { sig });
+        if (r.pending) setMsg({ ok: r.error, sig });
+        else if (!r.ok) setMsg({ err: `${r.error}${r.refunded ? " Your SOL is being refunded." : ""}`, sig });
+        else {
+          setMsg({ ok: `Opened ${long ? "long" : "short"} ${lev2}x${tp || sl ? " with " + [tp && `TP ${usd(tp)}`, sl && `SL ${usd(sl)}`].filter(Boolean).join(" / ") : ""}.`, sig });
+          setTpText("");
+          setSlText("");
+        }
+        onDone();
+        return;
+      }
+      const tx = new Transaction().add(openPositionIx(publicKey, mintKey, nonce, long, marginL, lev2));
       if (tp || sl) tx.add(setTriggersIx(publicKey, mintKey, nonce, sl, tp));
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction(sig, "confirmed");

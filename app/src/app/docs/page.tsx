@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { PublicKey } from "@solana/web3.js";
-import { BRAND, DBC_CONFIG, LAUNCH_FEE_SOL, LEVERAGE_ENABLED, LEVERAGE_PROGRAM, NETWORK, explorer } from "@/lib/config";
+import { BRAND, DBC_CONFIG, LAUNCH_FEE_SOL, LEVERAGE_ENABLED, LEVERAGE_MODE, LEVERAGE_PROGRAM, LS_VAULT, NETWORK, explorer } from "@/lib/config";
 import { TIERS } from "@/lib/tiers";
 import { Icon } from "@/components/Icon";
 
 export const metadata = { title: "Docs" };
 
 const TREASURY = "GCHZXtrG8dF8n7KNgcxWGR4QpCBhf71ZBgrQDeKroUi6";
-const VAULT = PublicKey.findProgramAddressSync([Buffer.from("vault")], LEVERAGE_PROGRAM)[0].toBase58();
+const BOT = LEVERAGE_MODE === "bot";
+const VAULT = BOT ? LS_VAULT : PublicKey.findProgramAddressSync([Buffer.from("vault")], LEVERAGE_PROGRAM)[0].toBase58();
 
 const NAV: [string, [string, string][]][] = [
   ["Start", [["overview", "Overview"], ["wallet", "Connect a wallet"], ["launch", "Launch a coin"], ["trade", "Buy and sell"]]],
@@ -134,7 +135,7 @@ export default function Docs() {
           <li><b>Long</b> profits when the price goes up. <b>Short</b> profits when it goes down.</li>
           <li>You trade with SOL only. You never need to hold the coin.</li>
           <li>
-            <b>Positions don&apos;t touch the chart.</b> They&apos;re tracked by an on-chain program, not by buying or selling the coin. When
+            <b>Positions don&apos;t touch the chart.</b> They&apos;re tracked by the platform{BOT ? "" : "'s on-chain program"}, not by buying or selling the coin. When
             you win, you&apos;re paid in SOL from the vault. A big winning short never dumps the coin on holders, and a long never
             needs to be sold into the pool.
           </li>
@@ -175,7 +176,7 @@ export default function Docs() {
         <ul>
           <li><b>Profit/loss</b> = position size × price change. Example: a 1 SOL margin at 3x is a 3 SOL position; if the price rises 20%, a long makes 0.6 SOL.</li>
           <li><b>Most you can lose:</b> your margin. Never more.</li>
-          <li><b>Liquidation:</b> if a position loses 90% of its margin it&apos;s closed automatically. Anyone can trigger it and earns 10% of what&apos;s left; the rest goes to the vault.</li>
+          <li><b>Liquidation:</b> if a position loses 90% of its margin it&apos;s closed automatically and what&apos;s left goes to the vault.</li>
           <li><b>Profit cap:</b> one position can win at most 5× its margin (3× under $100K).</li>
           <li><b>Fees:</b> charged on the position size when opening and again when closing. They go to the vault.</li>
           <li><b>Big positions pay for size:</b> large positions get a slightly worse entry and exit price, the same as if they had traded that size in the pool. This keeps long/short fair with the real market.</li>
@@ -193,11 +194,15 @@ export default function Docs() {
 
         <h2 id="vault">The vault</h2>
         <p>
-          The vault is an on-chain account owned by the long/short program. It&apos;s filled by 1.9% of every coin trade, long/short
+          {BOT ? "The vault is a public platform wallet." : "The vault is an on-chain account owned by the long/short program."} It&apos;s filled by 1.9% of every coin trade, long/short
           fees, and margin from losing positions. It pays winning traders.
         </p>
         <ul>
-          <li><b>Nobody can withdraw from it:</b> not the team, not the admin. The program has no withdraw function. The only way SOL leaves is a payout to a trader closing a position, or a liquidation reward.</li>
+          {BOT ? (
+            <li><b>Payouts are automatic:</b> the platform&apos;s engine pays winners from it by fixed rules (the same rules as the on-chain version, which it will move to). Every payout is a public transaction you can check.</li>
+          ) : (
+            <li><b>Nobody can withdraw from it:</b> not the team, not the admin. The program has no withdraw function. The only way SOL leaves is a payout to a trader closing a position, or a liquidation reward.</li>
+          )}
           <li>It&apos;s public. Check its balance anytime: <Addr a={VAULT} /></li>
         </ul>
 
@@ -216,7 +221,7 @@ export default function Docs() {
         <h2 id="addresses">Addresses</h2>
         <ul>
           <li>Launch config (Meteora): <Addr a={DBC_CONFIG.toBase58()} /></li>
-          <li>Long/short program: <Addr a={LEVERAGE_PROGRAM.toBase58()} /></li>
+          {!BOT && <li>Long/short program: <Addr a={LEVERAGE_PROGRAM.toBase58()} /></li>}
           <li>Long/short vault: <Addr a={VAULT} /></li>
           <li>Treasury: <Addr a={TREASURY} /></li>
         </ul>
