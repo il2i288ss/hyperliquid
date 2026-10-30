@@ -28,6 +28,7 @@ export function TopBar() {
   const nav = [
     { href: "/", label: "Discover" },
     { href: "/launch", label: "Launch" },
+    { href: "/guide", label: "How it works" },
   ];
 
   // Paste a coin address to jump straight to it.

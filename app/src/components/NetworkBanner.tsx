@@ -32,7 +32,7 @@ export function NetworkBanner() {
       <b>This is the devnet test site and your wallet has no devnet SOL.</b>{" "}
       In Phantom: Settings → Developer Settings → Testnet Mode → <b>Solana Devnet</b>. Then get free test SOL at{" "}
       <a href="https://faucet.solana.com" target="_blank" rel="noreferrer">faucet.solana.com</a> for{" "}
-      <span className="mono">{publicKey!.toBase58()}</span>.
+      <span className="mono">{publicKey!.toBase58()}</span>. <a href="/guide">Full guide</a>
     </div>
   );
 }
