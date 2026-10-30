@@ -1,0 +1,12 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "ci-logs": false,
+      "devnet-logs": false,
+      "devnet-ls-test": false,
+      "inspect": false,
+      "mainnet-program": false,
+      "redesign": false
+    }
+  }
+}
