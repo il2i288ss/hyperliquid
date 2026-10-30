@@ -1,0 +1,76 @@
+{
+  "checks": [
+    {
+      "name": "create config",
+      "ok": true,
+      "detail": "2gvEs9tm5kpjNmf8kEtqkrc7jaqjV6beuVzY4FdUXD88"
+    },
+    {
+      "name": "launch with first buy",
+      "ok": true,
+      "detail": "E9Jx1iXk7SgUY2Wf3LXtDNcwgSJwxh9kFqbhNHzbhGEu (total cost 0.1021 SOL incl. 0.05 buy, 0.03 fee, rent)"
+    },
+    {
+      "name": "creator received tokens",
+      "ok": true,
+      "detail": "1601789796719 raw units"
+    },
+    {
+      "name": "90% fee in launch slot",
+      "ok": true,
+      "detail": "90.00%"
+    },
+    {
+      "name": "3.75% fee after launch slot",
+      "ok": true,
+      "detail": "3.75%"
+    },
+    {
+      "name": "buy",
+      "ok": true,
+      "detail": "+1597050217576 raw units"
+    },
+    {
+      "name": "sell",
+      "ok": true,
+      "detail": "-1599420007147 raw units"
+    },
+    {
+      "name": "platform fees accrued in SOL",
+      "ok": true,
+      "detail": "0.00444589 SOL"
+    },
+    {
+      "name": "creator gets no fee share",
+      "ok": true,
+      "detail": "0 SOL"
+    },
+    {
+      "name": "claim trading fees",
+      "ok": true,
+      "detail": "+0.00444089 SOL (after tx fee)"
+    },
+    {
+      "name": "claim launch fee (~0.027 SOL)",
+      "ok": true,
+      "detail": "+0.026995 SOL"
+    }
+  ],
+  "wallet": "8uGkCjrhr57QbPnkVsLhW681dzcb5zGaE1zEPWt6HPEr",
+  "configTx": "2EhtnymNeC3vpfvGfFj5NZrUZd3MthNVi3fyiHhxP9TyWX2nVWZzvJH8P1JAdbL91R8qukoN3RvGwUg6gM8qnASx",
+  "config": "2gvEs9tm5kpjNmf8kEtqkrc7jaqjV6beuVzY4FdUXD88",
+  "launchTx": "5z5vgYCHnWPnREvN6WDhhA27Q6tJpXK8GFdGYPRLKBpHh7W3uDrFCqmREy8FMQq7EJnmbj6wmMBwAqecqSGopU2h",
+  "mint": "E9Jx1iXk7SgUY2Wf3LXtDNcwgSJwxh9kFqbhNHzbhGEu",
+  "launchCostSol": 0.10208008,
+  "pool": "DzqFkuqBJFhx8SeWRGmC8TKBidzyLFtqLtEreak9prMX",
+  "feeBps": {
+    "launchSlot": 9000,
+    "after": 375
+  },
+  "buyTx": "2k4YhfUJKDbBXWrW7cusoq2veZNzigPHG4T1uGfGqmHPK8srsiJWJpHjd6a4Eih6HNSmtB9ioLM3r2DXLaaK8Eom",
+  "sellTx": "dUb8bDRcUSAnHbNPPJ2cfJJ6wK82UNp4dmbNxbSCsCeCynNyYkGyszQ1kHv5Cmi1LwwxoahWUcY52sYPzxyr4Ho",
+  "partnerFeeSol": 0.00444589,
+  "claimTx": "4rfrzus6z76knvJVQoFGn8uK5PRPPvnwkM3SWTxhN9g3HsV8rBzNKzpk2vNP1YUStzCaJ6eqxHYXmz9hGSR5w58",
+  "launchFeeTx": "2b5JeNZZZyKY9e22LcBWzutcwfmFmCAZUZ3jYLnSrrmVwW6BaKgGTojRvFZwrKSsJFHJrtDrBSi52gMmJ37bxFac",
+  "spentSol": 0.080249328
+}

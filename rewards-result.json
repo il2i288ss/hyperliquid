@@ -1,0 +1,73 @@
+{
+  "checks": [
+    {
+      "name": "launch",
+      "ok": true,
+      "detail": "GmnmjuDCctxgc1vnaEr9Q6RfQDNe2qHakV1zmrkBfqtB"
+    },
+    {
+      "name": "3 holders bought",
+      "ok": true,
+      "detail": "A 0.03, B 0.015, C 0.015 SOL"
+    },
+    {
+      "name": "snapshot finds exactly the 3 holders",
+      "ok": true,
+      "detail": "B, C, A"
+    },
+    {
+      "name": "team wallet excluded",
+      "ok": true,
+      "detail": "creator/team wallet not in snapshot"
+    },
+    {
+      "name": "pool vault (program account) excluded",
+      "ok": true,
+      "detail": "no program-owned wallets in snapshot"
+    },
+    {
+      "name": "payouts landed exactly",
+      "ok": true,
+      "detail": "{\"B\":\"0.002665 SOL\",\"C\":\"0.001997 SOL\",\"A\":\"0.005338 SOL\"}"
+    },
+    {
+      "name": "shares match average holdings",
+      "ok": true,
+      "detail": "each payout = pot x avg balance / total"
+    },
+    {
+      "name": "whole pot paid out (rounding < 10 lamports)",
+      "ok": true,
+      "detail": "2 lamports dust"
+    },
+    {
+      "name": "bigger holder earns more (A > B)",
+      "ok": true,
+      "detail": "A 5337600 > B 2665242"
+    },
+    {
+      "name": "seller earns less than equal buyer (C < B)",
+      "ok": true,
+      "detail": "C 1997156 < B 2665242"
+    }
+  ],
+  "mint": "GmnmjuDCctxgc1vnaEr9Q6RfQDNe2qHakV1zmrkBfqtB",
+  "snapshots": [
+    {
+      "BAeYEKTCK6r6kdFFeaNcVjzXA1X9CeTiK5iJRnWmkmj4": "479611762947",
+      "BhZLe6w5xdRnioNDde5sL1Zny9WH3QNFsXeHGcF75Ktg": "479185769987",
+      "7a381n4uj21HfNyftgM7btYC2L6hRySND2A5yPKTC3Kx": "960503779029"
+    },
+    {
+      "BAeYEKTCK6r6kdFFeaNcVjzXA1X9CeTiK5iJRnWmkmj4": "479611762947",
+      "BhZLe6w5xdRnioNDde5sL1Zny9WH3QNFsXeHGcF75Ktg": "239592884994",
+      "7a381n4uj21HfNyftgM7btYC2L6hRySND2A5yPKTC3Kx": "960503779029"
+    }
+  ],
+  "payoutTx": "tkR4bygTz7ucpwkX8izf69AthGHwb8xPA3Fu8nvkkVK9JyP3jpC59M4NTqD5cAAcJCUdwrjDEYyQyWXYHAQUZWm",
+  "payouts": {
+    "B": "0.002665 SOL",
+    "C": "0.001997 SOL",
+    "A": "0.005338 SOL"
+  }
+}
