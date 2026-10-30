@@ -57,7 +57,7 @@ async function main() {
   let mcap = await mcapUsd();
   result.startMcapUsd = Math.round(mcap);
   let spent = 0;
-  while (mcap < TARGET_USD && spent < 3) {
+  while (mcap < TARGET_USD && spent < 1) {
     await send(
       await dbc.pool.swap({ owner: admin.publicKey, pool, amountIn: new BN(0.25 * LAMPORTS_PER_SOL), minimumAmountOut: new BN(1), swapBaseForQuote: false, referralTokenAccount: null }),
     );

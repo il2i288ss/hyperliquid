@@ -7,7 +7,7 @@ on:
     inputs:
       sol_usd:
         description: Devnet SOL price in USD (makes $100K reachable)
-        default: "2000"
+        default: "3500"
 
 permissions:
   contents: write
@@ -36,7 +36,7 @@ jobs:
           git clone -q --depth 1 -b devnet-program "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" /tmp/program
           echo "LEVERAGE_PROGRAM_ID=$(cat /tmp/program/program-id.txt)" >> "$GITHUB_ENV"
           node -e 'const s=require("/tmp/state/platform.json"); const c=s.coins.at(-1); console.log(`DEMO_MINT=${c.mint}\nDEMO_POOL=${c.pool}`)' >> "$GITHUB_ENV"
-          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 1.5 2>&1 | tee /tmp/state/wallet.txt
+          npx tsx src/devnet-wallet.ts "$ADMIN_KEYPAIR" 0.4 2>&1 | tee /tmp/state/wallet.txt
       - name: Demo test
         run: npx tsx src/devnet-demo-test.ts
       - name: Publish results
