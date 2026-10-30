@@ -28,6 +28,7 @@ const keeper = loadKeypair("KEEPER_KEYPAIR");
 const LEVERAGE = Boolean(process.env.LEVERAGE_PROGRAM_ID);
 const lev = new LeverageClient(new PublicKey(process.env.LEVERAGE_PROGRAM_ID || "11111111111111111111111111111111"));
 const config = new PublicKey(process.env.PLATFORM_CONFIG!);
+if (!process.env.RPC_URL) throw new Error("Set RPC_URL");
 const REWARDS = process.env.REWARDS === "on";
 const DISC = {
   Market: Buffer.from([219, 190, 213, 55, 0, 227, 198, 154]),
@@ -151,6 +152,8 @@ async function liquidateJob() {
 }
 
 async function payoutJob() {
+  // Main coin: every fee straight to the treasury.
+  if (process.env.MAIN_COIN_CONFIG) await claimFees(true).catch((e) => alert("payout/main", e));
   await claimFees(false);
   await splitFees();
   await payHolders(false);
