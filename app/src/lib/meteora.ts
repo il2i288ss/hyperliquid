@@ -81,7 +81,7 @@ export async function buildSwapTx(opts: {
   const pool = poolForMint(mint);
   const virtualPool = await dbc.state.getPool(pool);
   if (!virtualPool) throw new Error("Coin not found on this launchpad");
-  const poolConfig = await dbc.state.getPoolConfig(virtualPool.config);
+  const poolConfig = await dbc.state.getPoolConfig(virtualPool.poolState.config);
   if (!poolConfig) throw new Error("Coin config not found");
   const currentPoint = new BN(await connection.getSlot());
 

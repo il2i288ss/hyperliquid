@@ -77,6 +77,10 @@ pub mod leverage {
     pub fn update_price(ctx: Context<UpdatePrice>) -> Result<()> {
         let m = &mut ctx.accounts.market;
         require_keys_eq!(ctx.accounts.pool.key(), m.pool, ErrorCode::BadPool);
+        if m.pool_kind == 0 {
+            // Only accept accounts owned by Meteora's DBC program.
+            require_keys_eq!(*ctx.accounts.pool.owner, DBC_PROGRAM_ID, ErrorCode::BadPool);
+        }
         let (price, pool_sol) = read_pool(m.pool_kind, &ctx.accounts.pool.try_borrow_data()?)?;
         let now = Clock::get()?.unix_timestamp;
         let i = m.obs_idx as usize % OBS;
@@ -231,6 +235,7 @@ fn read_pool(kind: u8, data: &[u8]) -> Result<(u128, u64)> {
 // @meteora-ag/dynamic-bonding-curve-sdk 1.5.13: account size 424.
 // On the curve, quoteReserve is the real SOL deposited; it understates depth
 // early on, which makes virtual price impact larger (safer), not smaller.
+const DBC_PROGRAM_ID: Pubkey = pubkey!("dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN");
 const DBC_SQRT_PRICE_OFFSET: usize = 280;
 const DBC_QUOTE_RESERVE_OFFSET: usize = 240;
 // DAMM v2 Pool: fill from @meteora-ag/cp-amm-sdk IDL before enabling

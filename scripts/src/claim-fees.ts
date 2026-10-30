@@ -33,7 +33,7 @@ async function main() {
 
   let claimed = 0;
   for (const { publicKey: pool, account } of pools) {
-    const mint = account.baseMint.toBase58();
+    const mint = account.poolState.baseMint.toBase58();
     try {
       const before = await bal();
       const tx = await dbc.partner.claimPartnerTradingFeeToReceiver({
